@@ -815,19 +815,19 @@ export class TableRenderer {
     this.floatingLayer = floatingLayer;
     this.sceneWrap = canvas.parentElement;
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(FOG_COLOR);
     this.scene.fog = new THREE.Fog(FOG_COLOR, 8, 18);
 
     this.camera = new THREE.PerspectiveCamera(50, RENDER_WIDTH / RENDER_HEIGHT, 0.1, 40);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: false,
-      alpha: false,
+      alpha: true,
     });
     this.renderer.setPixelRatio(1);
     this.renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = false;
+    this.renderer.setClearColor(0x000000, 0);
 
     this.clock = new THREE.Clock();
     this.frame = 0;
@@ -1040,8 +1040,14 @@ export class TableRenderer {
 
     this.currentThemeKey = themeKey;
     const theme = TABLE_THEMES[themeKey] ?? TABLE_THEMES["backroom-tavern"];
-    this.scene.background = new THREE.Color(theme.fog);
     this.scene.fog.color.setHex(theme.fog);
+    if (this.sceneWrap) {
+      this.sceneWrap.style.setProperty("--scene-fog", `#${theme.fog.toString(16).padStart(6, "0")}`);
+      this.sceneWrap.style.setProperty("--scene-backdrop", `#${theme.backdrop.toString(16).padStart(6, "0")}`);
+      this.sceneWrap.style.setProperty("--scene-floor", `#${theme.floor.toString(16).padStart(6, "0")}`);
+      this.sceneWrap.style.setProperty("--scene-felt", `rgb(${Math.round(theme.feltTint[0] * 70)}, ${Math.round(theme.feltTint[1] * 110)}, ${Math.round(theme.feltTint[2] * 86)})`);
+      this.sceneWrap.style.setProperty("--scene-rim", `#${theme.rim.toString(16).padStart(6, "0")}`);
+    }
     this.ambientLight?.color.setHex(theme.ambient);
     this.chandelierLight?.color.setHex(theme.light);
     this.backdropMaterial?.color.setHex(theme.backdrop);

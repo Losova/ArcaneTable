@@ -1205,6 +1205,11 @@ button,
 }
 
 .scene-wrap {
+  --scene-fog: #2b2331;
+  --scene-backdrop: #f4d4a0;
+  --scene-floor: #2b1d2b;
+  --scene-felt: rgb(70, 110, 86);
+  --scene-rim: #ae7246;
   position: relative;
   display: grid;
   place-items: center;
@@ -1220,13 +1225,46 @@ button,
     inset 0 0 18px rgba(101, 64, 135, 0.18);
 }
 
+.scene-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--scene-backdrop) 26%, transparent), transparent 16%),
+    radial-gradient(circle at 50% 56%, color-mix(in srgb, var(--scene-felt) 40%, transparent), transparent 23%),
+    linear-gradient(180deg, color-mix(in srgb, var(--scene-fog) 82%, #120d16) 0%, color-mix(in srgb, var(--scene-floor) 90%, #0a0710) 100%);
+  z-index: 0;
+}
+
+.scene-wrap::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 53%;
+  width: 58%;
+  height: 38%;
+  transform: translate(-50%, -50%);
+  clip-path: polygon(16% 0%, 84% 0%, 100% 22%, 100% 78%, 84% 100%, 16% 100%, 0% 78%, 0% 22%);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, color-mix(in srgb, var(--scene-felt) 100%, #143628) 0%, color-mix(in srgb, var(--scene-felt) 68%, #0d1f18) 100%);
+  border: 10px solid var(--scene-rim);
+  box-shadow:
+    0 28px 54px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 3px rgba(248, 233, 188, 0.12);
+  z-index: 0;
+}
+
 #scene {
   width: 100%;
   height: 100%;
   max-width: 100%;
   display: block;
+  position: relative;
+  z-index: 1;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  background: transparent;
 }
 
 .floating-text-layer,
@@ -1234,6 +1272,10 @@ button,
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.floating-text-layer {
+  z-index: 2;
 }
 
 .scanline-overlay {
@@ -1244,6 +1286,7 @@ button,
       var(--scan) 2px 3px
     );
   mix-blend-mode: screen;
+  z-index: 3;
 }
 
 .scene-wrap.impact {
