@@ -1,4 +1,4 @@
-import * as THREE from "https://unpkg.com/three@0.164.1/build/three.module.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
 import { DEFAULT_CUSTOMIZATION } from "./customization.js";
 import { SPELL_CATEGORY_COLORS } from "./spells.js";
 
@@ -19,43 +19,43 @@ const CAMERA_GLITCH_FRAMES = 12;
 const TABLE_THEMES = {
   "backroom-tavern": {
     fog: 0x2b2331,
-    ambient: 0x8a7a92,
-    light: 0xffe2a3,
+    ambient: 0xa4909f,
+    light: 0xffebb6,
     backdrop: 0xf4d4a0,
     floor: 0x2b1d2b,
     wall: 0x302034,
     backWall: 0x3a2735,
     ceiling: 0x201623,
-    tableBase: 0x5e3422,
-    rim: 0x8d5731,
+    tableBase: 0x73452b,
+    rim: 0xae7246,
     legs: 0x4a2719,
     feltTint: [1, 1, 1],
   },
   "crooked-casino": {
     fog: 0x241c29,
-    ambient: 0x9b6d61,
-    light: 0xffbf84,
+    ambient: 0xb48072,
+    light: 0xffcf97,
     backdrop: 0xffcf99,
     floor: 0x241425,
     wall: 0x3f2127,
     backWall: 0x4c252f,
     ceiling: 0x24141a,
-    tableBase: 0x6d3027,
-    rim: 0xb16634,
+    tableBase: 0x834034,
+    rim: 0xca7b48,
     legs: 0x52201a,
     feltTint: [1.08, 0.92, 0.9],
   },
   "audit-chamber": {
     fog: 0x1f2430,
-    ambient: 0x6d88a5,
-    light: 0xc8e1ff,
+    ambient: 0x88a5c2,
+    light: 0xd7ebff,
     backdrop: 0xbad8ff,
     floor: 0x1b2331,
     wall: 0x263347,
     backWall: 0x2d3b4f,
     ceiling: 0x141c28,
-    tableBase: 0x4b556a,
-    rim: 0x7a90ad,
+    tableBase: 0x5d6982,
+    rim: 0x95acc7,
     legs: 0x344154,
     feltTint: [0.82, 0.96, 1.08],
   },
@@ -907,10 +907,10 @@ export class TableRenderer {
   }
 
   buildEnvironment() {
-    this.ambientLight = new THREE.AmbientLight(0x8a7a92, 1.55);
+    this.ambientLight = new THREE.AmbientLight(0x8a7a92, 1.85);
     this.scene.add(this.ambientLight);
 
-    this.chandelierLight = new THREE.PointLight(0xffe2a3, 2.1, 18);
+    this.chandelierLight = new THREE.PointLight(0xffe2a3, 2.45, 20);
     this.chandelierLight.position.set(0, 6.4, 0);
     this.scene.add(this.chandelierLight);
 
@@ -1868,29 +1868,29 @@ export class TableRenderer {
   cutCamera(key) {
     const presets = {
       overview: [
-        { position: [0, 5.3, 8.4], lookAt: [0, 1.15, 0] },
-        { position: [-5.8, 4.7, 6.4], lookAt: [0, 1.1, 0] },
-        { position: [5.8, 4.9, 6.1], lookAt: [0, 1.2, 0] },
+        { position: [0, 5.8, 8.9], lookAt: [0, 1.2, 0] },
+        { position: [-5.2, 5.2, 7.1], lookAt: [0, 1.15, 0] },
+        { position: [5.2, 5.2, 7.1], lookAt: [0, 1.15, 0] },
       ],
       human: [
-        { position: [0, 3.4, 6.9], lookAt: [0, 1.25, 2.9] },
-        { position: [-1.6, 3.5, 6.1], lookAt: [0, 1.25, 3.0] },
-        { position: [1.8, 3.0, 6.0], lookAt: [0.2, 1.22, 2.8] },
+        { position: [0, 4.2, 7.6], lookAt: [0, 1.25, 1.9] },
+        { position: [-1.7, 4.1, 6.9], lookAt: [0, 1.25, 1.8] },
+        { position: [1.7, 4.0, 6.9], lookAt: [0, 1.25, 1.8] },
       ],
       bluff: [
-        { position: [-6.2, 3.3, 1.1], lookAt: [-4, 1.2, 0.7] },
-        { position: [-6.9, 4.2, 2.2], lookAt: [-3.8, 1.2, 0.7] },
-        { position: [-5.2, 2.9, 2.3], lookAt: [-4.1, 1.2, 0.6] },
+        { position: [-6.0, 4.0, 1.9], lookAt: [-3.6, 1.2, 0.7] },
+        { position: [-6.5, 4.5, 2.8], lookAt: [-3.8, 1.2, 0.7] },
+        { position: [-5.4, 3.6, 2.8], lookAt: [-3.9, 1.2, 0.6] },
       ],
       frost: [
-        { position: [6.2, 3.3, 1.1], lookAt: [4, 1.2, 0.7] },
-        { position: [6.9, 4.2, 2.2], lookAt: [3.8, 1.2, 0.7] },
-        { position: [5.2, 2.9, 2.3], lookAt: [4.1, 1.2, 0.6] },
+        { position: [6.0, 4.0, 1.9], lookAt: [3.6, 1.2, 0.7] },
+        { position: [6.5, 4.5, 2.8], lookAt: [3.8, 1.2, 0.7] },
+        { position: [5.4, 3.6, 2.8], lookAt: [3.9, 1.2, 0.6] },
       ],
       chaos: [
-        { position: [0, 3.1, -6.2], lookAt: [0, 1.2, -3.15] },
-        { position: [-1.8, 3.5, -5.6], lookAt: [0, 1.15, -3.25] },
-        { position: [1.9, 3.2, -5.4], lookAt: [0.1, 1.15, -3.3] },
+        { position: [0, 4.0, -6.3], lookAt: [0, 1.2, -2.7] },
+        { position: [-1.9, 4.2, -5.9], lookAt: [0, 1.15, -2.9] },
+        { position: [1.9, 4.0, -5.9], lookAt: [0.1, 1.15, -2.9] },
       ],
       wrong: [
         { position: [0, 0.9, -6.4], lookAt: [0, 0.6, 5.5] },

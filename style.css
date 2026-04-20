@@ -259,6 +259,31 @@ button,
   color: var(--white);
 }
 
+.tutorial-card {
+  background:
+    radial-gradient(circle at top right, rgba(170, 117, 67, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(229, 211, 181, 0.985), rgba(198, 174, 142, 0.985));
+  color: #22170f;
+}
+
+.tutorial-card .panel-heading h2,
+.tutorial-card .summary-copy,
+.tutorial-card .tutorial-steps p,
+.tutorial-card .codex-list p,
+.tutorial-card .codex-list strong {
+  color: #1d120b;
+  text-shadow: none;
+}
+
+.tutorial-card .panel-heading h2 {
+  letter-spacing: 0.02em;
+}
+
+.tutorial-card .secondary-button,
+.tutorial-card .action-button {
+  color: #fff7e6;
+}
+
 .title-screen__panel {
   background:
     radial-gradient(circle at 80% 10%, rgba(243, 212, 138, 0.08), transparent 18%),
@@ -1028,10 +1053,11 @@ button,
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
-  padding: 6px 8px;
-  width: fit-content;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  width: min(100%, 360px);
   min-width: 0;
   border-color: #7d6142;
   background:
@@ -1041,26 +1067,17 @@ button,
     4px 4px 0 rgba(0, 0, 0, 0.46);
 }
 
-.scene-header-box::before {
-  content: "tavern table";
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(243, 212, 138, 0.9);
-  font-family: "IM Fell English SC", "Cormorant Garamond", serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-}
-
 .scene-header-copy {
-  display: none;
+  display: grid;
+  gap: 1px;
+  min-width: 0;
 }
 
 .scene-tools {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .scene-tools .secondary-button {
@@ -1195,7 +1212,9 @@ button,
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border: 2px solid #6d4d5e;
-  background: #050307;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(64, 86, 70, 0.2), transparent 28%),
+    #0f0a12;
   box-shadow:
     0 0 0 1px rgba(246, 221, 169, 0.16),
     inset 0 0 18px rgba(101, 64, 135, 0.18);
