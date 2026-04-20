@@ -448,9 +448,9 @@ function createBurstTexture(color = "#f5e490", shape = "star") {
 }
 
 function flatMaterial(color) {
-  return new THREE.MeshLambertMaterial({
+  return new THREE.MeshBasicMaterial({
     color,
-    flatShading: true,
+    toneMapped: false,
   });
 }
 
@@ -974,7 +974,6 @@ export class TableRenderer {
 
     const feltGeometry = new THREE.CircleGeometry(3.32, 8);
     const feltMaterial = this.createFeltMaterial();
-    this.feltUniforms = feltMaterial.uniforms;
     this.felt = new THREE.Mesh(feltGeometry, feltMaterial);
     this.felt.rotation.x = -Math.PI / 2;
     this.felt.position.y = 1.12;
@@ -1025,38 +1024,11 @@ export class TableRenderer {
 
   createFeltMaterial() {
     const texture = createFeltTexture();
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        uMap: { value: texture },
-        uTime: { value: 0 },
-        uTint: { value: new THREE.Vector3(1, 1, 1) },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        varying vec3 vWorld;
-        void main() {
-          vUv = uv;
-          vec4 world = modelMatrix * vec4(position, 1.0);
-          vWorld = world.xyz;
-          gl_Position = projectionMatrix * viewMatrix * world;
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D uMap;
-        uniform float uTime;
-        uniform vec3 uTint;
-        varying vec2 vUv;
-        varying vec3 vWorld;
-        void main() {
-          vec2 uv = vUv;
-          uv.x += sin(vWorld.x * 1.7 + uTime * 1.2) * 0.0055;
-          uv.y += cos(vWorld.z * 1.9 + uTime * 1.0) * 0.004;
-          uv += (uv - 0.5) * 0.009;
-          vec4 color = texture2D(uMap, uv * 2.0);
-          color.rgb *= uTint;
-          gl_FragColor = color;
-        }
-      `,
+    texture.repeat.set(2, 2);
+    return new THREE.MeshBasicMaterial({
+      map: texture,
+      color: 0xffffff,
+      toneMapped: false,
     });
   }
 
@@ -1091,7 +1063,9 @@ export class TableRenderer {
     this.tableBase?.material?.color?.setHex(theme.tableBase);
     this.rim?.material?.color?.setHex(theme.rim);
     this.tableLegs.forEach((leg) => leg.material?.color?.setHex(theme.legs));
-    this.feltUniforms?.uTint?.value?.set(...theme.feltTint);
+    if (this.felt?.material?.color) {
+      this.felt.material.color.setRGB(...theme.feltTint);
+    }
     this.buildWizardTokens();
   }
 
@@ -2037,7 +2011,6 @@ export class TableRenderer {
       }
     }
 
-    this.feltUniforms.uTime.value += delta;
     this.updateHover();
 
     if (this.showdownSequence && !this.showdownSequence.completed) {
