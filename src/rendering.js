@@ -2008,6 +2008,10 @@ export class TableRenderer {
 
   animate() {
     const delta = this.clock.getDelta();
+    const state = this.latestState ?? {
+      roundEnded: false,
+      lastRoundSummary: null,
+    };
     this.frame += 1;
 
     if (this.glitchFrames > 0) {
