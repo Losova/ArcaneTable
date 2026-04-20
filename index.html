@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wizard Poker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IM+Fell+English+SC&family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="boot-screen" class="boot-screen">
+      <div class="boot-logo">
+        <div class="boot-mark" aria-hidden="true"></div>
+        <h1>WIZCORP ENTERTAINMENT</h1>
+        <p>Tavern ledger check........ok</p>
+        <p>Opening the backroom rulebook</p>
+      </div>
+    </div>
+
+    <div id="title-screen" class="title-screen">
+      <div class="title-screen__panel">
+        <p id="title-kicker" class="title-kicker">Arcane card table. Three rivals. One pot.</p>
+        <h1 id="title-heading">WIZARD POKER</h1>
+        <p id="title-copy" class="title-copy">Draw cards, spend mana, and survive the table.</p>
+
+        <section class="title-showcase">
+          <div class="title-showcase-copy">
+            <span class="title-showcase-kicker">Tonight's look</span>
+            <strong id="title-showcase-name">Backroom fit</strong>
+            <p id="title-showcase-copy">Your current wizard fit is waiting by the felt, acting like this room belongs to them.</p>
+          </div>
+          <div class="title-showcase-stage">
+            <canvas id="title-wizard-preview" width="320" height="240" aria-label="Your customized wizard preview"></canvas>
+          </div>
+        </section>
+
+        <section class="title-tables">
+          <div class="title-results__head">
+            <span>Tonight's game</span>
+            <strong id="table-selection-headline">Wizard Poker</strong>
+          </div>
+          <div id="table-grid" class="table-grid">
+            <button class="table-card selected-target" type="button" data-table-game="poker">
+              <strong>Wizard Poker</strong>
+              <span>Bluff, bet, sabotage.</span>
+              <small>Playable now</small>
+            </button>
+            <button class="table-card coming-soon" type="button" data-table-game="blackjack">
+              <strong>Wizard Blackjack</strong>
+              <span>Push totals. Cheat fate.</span>
+              <small>Coming soon</small>
+            </button>
+            <button class="table-card" type="button" data-table-game="uno">
+              <strong>Wizard Uno</strong>
+              <span>Curse colors. End friendships.</span>
+              <small>Playable now</small>
+            </button>
+            <button class="table-card coming-soon" type="button" data-table-game="war">
+              <strong>Wizard War</strong>
+              <span>Simple cards. Terrible spells.</span>
+              <small>Coming soon</small>
+            </button>
+          </div>
+        </section>
+
+        <div class="title-actions">
+          <button id="start-button" class="action-button">Play</button>
+          <button id="continue-button" class="secondary-button hidden">Continue run</button>
+          <button id="daily-button" class="action-button">Daily run</button>
+          <button id="wardrobe-button" class="secondary-button">Wardrobe</button>
+          <button id="stats-button" class="secondary-button">Stats</button>
+          <button id="title-tutorial-button" class="secondary-button">How to play</button>
+        </div>
+
+        <p id="title-note" class="title-note">Check, raise, fold, or cast. That is the whole problem.</p>
+
+        <div id="title-results" class="title-results hidden">
+          <div class="title-results__head">
+            <span id="title-results-kicker">Last clear</span>
+            <strong id="title-results-rank">Licensed Menace</strong>
+          </div>
+          <p id="title-results-copy" class="title-results-copy">You cleared the tavern and came back louder than before.</p>
+          <div id="title-results-tags" class="title-results-tags"></div>
+        </div>
+
+        <div id="title-profile" class="title-profile hidden">
+          <div class="title-results__head">
+            <span>Profile</span>
+            <strong id="title-profile-rank">Fresh Wizard</strong>
+          </div>
+          <div id="title-profile-tags" class="title-results-tags"></div>
+        </div>
+
+        <details class="title-advanced">
+          <summary>Advanced options</summary>
+          <div class="title-options">
+            <label class="option-stack">
+              <span>TEST SEED</span>
+              <input id="seed-input" type="text" maxlength="32" placeholder="AUTO" />
+            </label>
+            <label class="option-stack">
+              <span>UI SCALE</span>
+              <select id="ui-scale-select">
+                <option value="normal">Normal</option>
+                <option value="large">Large</option>
+              </select>
+            </label>
+            <label class="option-stack">
+              <span>LOADOUT</span>
+              <select id="loadout-select">
+                <option value="plain-deck">Plain Deck</option>
+                <option value="loaded-wand">Loaded Wand</option>
+                <option value="crooked-thumb">Crooked Thumb</option>
+                <option value="sneak-mirror">Sneak Mirror</option>
+              </select>
+            </label>
+            <label class="option-toggle">
+              <input id="chaos-toggle" type="checkbox" />
+              <span>CHAOS MODE</span>
+            </label>
+            <label class="option-toggle">
+              <input id="double-toggle" type="checkbox" />
+              <span>DOUBLE OR NOTHING</span>
+            </label>
+            <label class="option-toggle">
+              <input id="debug-toggle" type="checkbox" />
+              <span>DEBUG TOOLS</span>
+            </label>
+            <label class="option-toggle">
+              <input id="stable-toggle" type="checkbox" />
+              <span>STABLE VISUALS</span>
+            </label>
+            <label class="option-toggle">
+              <input id="sound-toggle" type="checkbox" checked />
+              <span>SOUND</span>
+            </label>
+            <label class="option-toggle">
+              <input id="flash-toggle" type="checkbox" />
+              <span>REDUCED FLASH</span>
+            </label>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div id="tutorial-overlay" class="overlay hidden">
+      <div class="overlay-card tutorial-card">
+        <div class="panel-heading">
+          <h2>Quick help</h2>
+          <button id="close-tutorial-button" class="secondary-button">Back</button>
+        </div>
+        <div id="tutorial-steps" class="tutorial-steps">
+          <p>1. Each round deals 3 private cards to every wizard, then 3 shared runes appear one by one.</p>
+          <p>2. On your turn, you can check or call, raise, fold, or cast 1 spell before you act.</p>
+          <p>3. You begin each round with 6 mana, so it helps to save a little for the later turns.</p>
+          <p>4. Your best 3-card hand wins, unless a spell or table effect changes the rules for that round.</p>
+          <p>5. If a spell needs a target, the game will highlight what to click next.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="codex-overlay" class="overlay hidden">
+      <div class="overlay-card tutorial-card">
+        <div class="panel-heading">
+          <h2>Wizard codex</h2>
+          <button id="close-codex-button" class="secondary-button">Back</button>
+        </div>
+        <div id="codex-list" class="tutorial-steps codex-list"></div>
+      </div>
+    </div>
+
+    <div id="stats-overlay" class="overlay hidden">
+      <div class="overlay-card tutorial-card">
+        <div class="panel-heading">
+          <h2>Run stats</h2>
+          <button id="close-stats-button" class="secondary-button">Back</button>
+        </div>
+        <div id="stats-list" class="tutorial-steps codex-list"></div>
+      </div>
+    </div>
+
+    <div id="wardrobe-overlay" class="overlay hidden">
+      <div class="overlay-card wardrobe-card">
+        <div class="panel-heading">
+          <h2>Wizard wardrobe</h2>
+          <button id="close-wardrobe-button" class="secondary-button">Back</button>
+        </div>
+        <p id="wardrobe-lead" class="summary-copy">Spend your tavern winnings on suspiciously elegant wizard clothes.</p>
+        <div class="wardrobe-layout">
+          <section class="wardrobe-stage">
+            <div class="wardrobe-stage-head">
+              <span>The mirror fitting circle</span>
+              <strong id="wardrobe-scene-title">Creeping Moon Outfitters</strong>
+            </div>
+            <div class="wardrobe-name-row">
+              <label class="option-stack">
+                <span>WIZARD NAME</span>
+                <input id="wardrobe-name-input" type="text" maxlength="20" placeholder="You" />
+              </label>
+              <button id="wardrobe-name-button" class="action-button" type="button">Set name</button>
+            </div>
+            <canvas id="wardrobe-preview" width="420" height="520" aria-label="Wardrobe wizard preview"></canvas>
+            <p id="wardrobe-scene-copy" class="title-results-copy">A cramped little boutique somewhere behind the tavern wall, with too many candles and exactly one mirror that blinks back.</p>
+          </section>
+          <section class="wardrobe-merch">
+            <div id="wardrobe-gold" class="wardrobe-gold"></div>
+            <div id="wardrobe-dyes" class="wardrobe-dyes"></div>
+            <div id="wardrobe-unlocks" class="wardrobe-unlocks"></div>
+            <div id="wardrobe-equipment" class="wardrobe-equipment"></div>
+            <div id="wardrobe-shop" class="wardrobe-shop"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="transition-banner" class="transition-banner hidden" aria-live="polite">
+      <div class="transition-banner__inner">
+        <strong id="transition-title">ROUND START</strong>
+        <span id="transition-subtitle">THE TAVERN IS MAKING A TERRIBLE DECISION.</span>
+      </div>
+    </div>
+
+    <div id="round-summary-overlay" class="overlay hidden">
+      <div class="overlay-card summary-overlay-card">
+        <div class="panel-heading">
+          <h2>Round summary</h2>
+          <span id="round-summary-kicker">Result</span>
+        </div>
+        <div id="round-summary-body" class="round-summary-body"></div>
+        <div class="summary-actions">
+          <button id="summary-next-round-button" class="action-button">Next round</button>
+          <button id="summary-menu-button" class="secondary-button">Title screen</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="relic-overlay" class="overlay hidden">
+      <div class="overlay-card relic-overlay-card">
+        <div class="panel-heading">
+          <h2>Pick a relic</h2>
+          <span id="relic-kicker">Choose 1</span>
+        </div>
+        <p id="relic-lead" class="summary-copy">You won the round. Pick 1 passive bonus to help with the rest of this run.</p>
+        <div id="relic-draft-list" class="relic-draft-list"></div>
+      </div>
+    </div>
+
+    <div id="spell-draft-overlay" class="overlay hidden">
+      <div class="overlay-card relic-overlay-card">
+        <div class="panel-heading">
+          <h2>Pick opening spells</h2>
+          <span id="spell-draft-kicker">Choose 2</span>
+        </div>
+        <p id="spell-draft-lead" class="summary-copy">Start the run with two spells you actually wanted for once.</p>
+        <div id="spell-draft-list" class="relic-draft-list"></div>
+        <div class="summary-actions">
+          <button id="spell-draft-confirm-button" class="action-button" disabled>Lock 2 spells</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="settings-overlay" class="overlay hidden">
+      <div class="overlay-card tutorial-card">
+        <div class="panel-heading">
+          <h2>Table settings</h2>
+          <button id="close-settings-button" class="secondary-button">Back</button>
+        </div>
+        <div class="title-options settings-options">
+          <label class="option-stack">
+            <span>UI SCALE</span>
+            <select id="match-ui-scale-select">
+              <option value="normal">Normal</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label class="option-toggle">
+            <input id="match-sound-toggle" type="checkbox" checked />
+            <span>SOUND</span>
+          </label>
+          <label class="option-toggle">
+            <input id="match-stable-toggle" type="checkbox" />
+            <span>STABLE VISUALS</span>
+          </label>
+          <label class="option-toggle">
+            <input id="match-flash-toggle" type="checkbox" />
+            <span>REDUCED FLASH</span>
+          </label>
+        </div>
+        <div class="summary-actions">
+          <button id="reset-run-button" class="action-button danger">Reset run</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="uno-color-overlay" class="overlay hidden">
+      <div class="overlay-card tutorial-card">
+        <div class="panel-heading">
+          <h2>Choose a color</h2>
+          <button id="close-uno-color-button" class="secondary-button">Back</button>
+        </div>
+        <p id="uno-color-lead" class="summary-copy">Wild cards are your problem now. Pick the color the table has to obey.</p>
+        <div id="uno-color-grid" class="title-actions"></div>
+      </div>
+    </div>
+
+    <div class="app-shell">
+      <div class="scene-column">
+        <div class="scene-header-box">
+          <div class="scene-header-copy">
+            <span>LIVE TABLE</span>
+            <strong>Watch the middle</strong>
+          </div>
+          <div class="scene-tools">
+            <button id="camera-button" class="secondary-button">View</button>
+            <button id="codex-button" class="secondary-button">Codex</button>
+            <button id="settings-button" class="secondary-button">Menu</button>
+            <button id="help-button" class="secondary-button">Help</button>
+          </div>
+        </div>
+
+        <div class="scene-wrap">
+          <canvas id="scene"></canvas>
+          <div id="floating-text-layer" class="floating-text-layer" aria-hidden="true"></div>
+          <div class="scanline-overlay" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <aside class="hud">
+        <div class="hud-bookhead">
+          <span>TAVERN RULEBOOK</span>
+          <strong>WIZARD POKER NOTES</strong>
+        </div>
+
+        <section class="panel status-panel">
+          <div class="status-grid">
+            <div class="status-box">
+              <span>ROUND</span>
+              <strong id="round-label">1</strong>
+            </div>
+            <div class="status-box">
+              <span>PHASE</span>
+              <strong id="phase-label">ARCANE ANTE</strong>
+            </div>
+            <div class="status-box chips-box">
+              <span>POT</span>
+              <strong id="pot-label">0</strong>
+            </div>
+            <div class="status-box turn-box">
+              <span>TURN</span>
+              <strong id="turn-label">Waiting</strong>
+            </div>
+          </div>
+
+          <div class="mana-box">
+            <span>MANA</span>
+            <div id="mana-orbs" class="mana-orbs"></div>
+          </div>
+
+          <div id="phase-track" class="phase-track" aria-label="Round phases"></div>
+
+          <div class="status-meta-strip">
+            <div class="meta-pill">
+              <span>Record</span>
+              <strong id="record-label">0-0-0</strong>
+            </div>
+            <div class="meta-pill">
+              <span>Streak</span>
+              <strong id="streak-label">0 / 0</strong>
+            </div>
+            <div class="meta-pill">
+              <span>Run</span>
+              <strong id="seed-label">AUTO</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel combat-panel">
+          <div class="combat-head">
+            <div class="combat-head-copy">
+              <h2>Play</h2>
+              <span id="action-hint">Pick your move.</span>
+            </div>
+            <div class="combat-meta">
+              <strong id="hand-score">Waiting for deal</strong>
+              <span id="mana-label">6 ORBS</span>
+            </div>
+          </div>
+
+          <div id="latest-event-strip" class="latest-event-strip">
+            <strong id="latest-event-title">NOW</strong>
+            <span id="latest-event-copy">Fresh hand. Make your move.</span>
+          </div>
+
+          <div class="combat-cards">
+            <div class="combat-zone">
+              <span class="combat-label">HAND</span>
+              <div id="hand-cards" class="hand-cards"></div>
+            </div>
+            <div class="combat-zone combat-zone-shared">
+              <span class="combat-label">TABLE</span>
+              <span id="community-caption" class="combat-caption">Shared cards</span>
+              <div id="community-cards" class="community-cards"></div>
+            </div>
+          </div>
+
+          <div class="combat-controls actions-panel">
+            <div class="action-readout">
+              <div class="action-chip">
+                <span>STATE</span>
+                <strong id="action-state-label">Waiting</strong>
+              </div>
+              <div class="action-chip">
+                <span>TARGET</span>
+                <strong id="target-state-label">None</strong>
+              </div>
+              <div class="action-chip">
+                <span>SPELL</span>
+                <strong id="spell-state-label">Ready</strong>
+              </div>
+            </div>
+            <div class="actions-grid">
+              <button id="check-button" class="action-button">Check</button>
+              <button id="raise-button" class="action-button">Raise</button>
+              <button id="fold-button" class="action-button danger">Fold</button>
+            </div>
+          </div>
+
+          <div class="combat-spells spells-panel">
+            <div class="combat-strip-head">
+              <span class="combat-label">SPELLS</span>
+            </div>
+            <div id="spells-list" class="spells-list"></div>
+          </div>
+        </section>
+
+        <details class="panel panel-collapsible summary-panel">
+          <summary class="panel-collapse-head">
+            <span>Table</span>
+            <strong id="summary-kicker">Live state</strong>
+          </summary>
+          <div id="summary-body" class="summary-body"></div>
+          <div id="effects-list" class="effects-list"></div>
+        </details>
+
+        <details class="panel panel-collapsible players-panel">
+          <summary class="panel-collapse-head">
+            <span>Rivals</span>
+            <strong>Open</strong>
+          </summary>
+          <div class="panel-heading players-panel-tools">
+            <h2>Rivals</h2>
+            <button id="new-round-button" class="secondary-button">New round</button>
+          </div>
+          <div id="players-list" class="players-list"></div>
+        </details>
+
+        <details class="panel panel-collapsible run-panel">
+          <summary class="panel-collapse-head">
+            <span>Run</span>
+            <strong id="run-mode-label">Standard</strong>
+          </summary>
+          <div id="daily-mod-list" class="effects-list"></div>
+          <div id="relic-list" class="effects-list"></div>
+        </details>
+
+        <section id="debug-panel" class="panel debug-panel hidden">
+          <div class="panel-heading">
+            <h2>Debug tools</h2>
+            <span>For testing</span>
+          </div>
+          <div class="debug-actions">
+            <button id="debug-mana-button" class="secondary-button">+6 mana</button>
+            <button id="debug-spells-button" class="secondary-button">Redraw spells</button>
+            <button id="debug-cards-button" class="secondary-button">Reveal cards</button>
+          </div>
+        </section>
+
+        <details class="panel panel-collapsible log-panel">
+          <summary class="panel-collapse-head">
+            <span>Log</span>
+            <strong>Open</strong>
+          </summary>
+          <div id="log-list" class="log-list" aria-live="polite"></div>
+        </details>
+      </aside>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
