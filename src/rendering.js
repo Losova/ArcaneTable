@@ -1801,12 +1801,12 @@ export class TableRenderer {
       return;
     }
 
-    this.cutCamera(playerId ?? "overview");
+    this.cutCamera("overview");
   }
 
   cycleCamera() {
     this.cameraVariant = (this.cameraVariant + 1) % 3;
-    this.cutCamera(this.lastTurnId ?? "overview");
+    this.cutCamera("overview");
   }
 
   setPresentationSettings(settings = {}) {
