@@ -3000,7 +3000,8 @@ button,
 
 .players-panel {
   flex: 0 0 auto;
-  margin-top: 4px;
+  margin-top: 10px;
+  padding-top: 4px;
 }
 
 .run-panel,
@@ -3011,11 +3012,48 @@ button,
 .players-panel-tools {
   display: flex;
   justify-content: flex-end;
-  padding: 0 12px 6px;
+  padding: 0 12px 8px;
 }
 
 .players-panel-tools h2 {
   display: none;
+}
+
+.players-panel > .panel-collapse-head {
+  margin: 0 12px 8px;
+  padding: 9px 12px;
+  border: 1px solid rgba(214, 179, 117, 0.26);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 226, 0.08), rgba(255, 248, 226, 0.03));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 245, 217, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.players-panel > .panel-collapse-head:hover {
+  filter: brightness(1.04);
+  border-color: rgba(231, 200, 111, 0.4);
+}
+
+.players-panel > .panel-collapse-head::after {
+  content: "+";
+  color: #e6d2a0;
+  font-family: "Silkscreen", monospace;
+  font-size: 0.78rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.players-panel[open] > .panel-collapse-head::after {
+  content: "−";
+}
+
+.players-panel > .panel-collapse-head span {
+  color: #f6ecd5;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  flex: 1 1 auto;
 }
 
 .players-panel > .players-list {
@@ -3042,6 +3080,12 @@ button,
 .panel-collapsible[open] .panel-collapse-head {
   border-bottom: 2px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
+}
+
+.players-panel[open] > .panel-collapse-head {
+  border-bottom: 1px solid rgba(214, 179, 117, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 226, 0.1), rgba(255, 248, 226, 0.04));
 }
 
 .debug-actions {
