@@ -83,6 +83,14 @@ function smoothTexture(canvas) {
   return texture;
 }
 
+function getDisplaySize(canvas, fallbackWidth, fallbackHeight) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    width: Math.max(1, Math.round(rect.width || fallbackWidth)),
+    height: Math.max(1, Math.round(rect.height || fallbackHeight)),
+  };
+}
+
 function clearGroup(group) {
   while (group.children.length) {
     const child = group.children[0];
@@ -834,11 +842,13 @@ export class TableRenderer {
       antialias: false,
       alpha: true,
     });
-    this.renderer.setPixelRatio(1);
-    this.renderer.setSize(RENDER_WIDTH, RENDER_HEIGHT, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = false;
     this.renderer.setClearColor(0x000000, 0);
+    this.renderWidth = 0;
+    this.renderHeight = 0;
+    this.renderPixelRatio = 0;
+    this.resizeRenderer();
 
     this.clock = new THREE.Clock();
     this.frame = 0;
@@ -902,6 +912,26 @@ export class TableRenderer {
     this.buildWizardTokens();
     this.cutCamera("overview");
     this.attachPointerEvents();
+  }
+
+  resizeRenderer() {
+    const { width, height } = getDisplaySize(this.canvas, RENDER_WIDTH, RENDER_HEIGHT);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    if (
+      width === this.renderWidth
+      && height === this.renderHeight
+      && pixelRatio === this.renderPixelRatio
+    ) {
+      return;
+    }
+
+    this.renderWidth = width;
+    this.renderHeight = height;
+    this.renderPixelRatio = pixelRatio;
+    this.renderer.setPixelRatio(pixelRatio);
+    this.renderer.setSize(width, height, false);
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
   }
 
   attachPointerEvents() {
@@ -2018,6 +2048,7 @@ export class TableRenderer {
   }
 
   animate() {
+    this.resizeRenderer();
     const delta = this.clock.getDelta();
     const state = this.latestState ?? {
       roundEnded: false,
@@ -2227,9 +2258,11 @@ export class WizardPreviewRenderer {
       antialias: false,
       alpha: false,
     });
-    this.renderer.setPixelRatio(1);
-    this.renderer.setSize(canvas.width, canvas.height, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderWidth = 0;
+    this.renderHeight = 0;
+    this.renderPixelRatio = 0;
+    this.resizeRenderer();
 
     this.root = new THREE.Group();
     this.scene.add(this.root);
@@ -2264,6 +2297,26 @@ export class WizardPreviewRenderer {
     this.setStyle(DEFAULT_CUSTOMIZATION);
     this.loop = this.loop.bind(this);
     requestAnimationFrame(this.loop);
+  }
+
+  resizeRenderer() {
+    const { width, height } = getDisplaySize(this.canvas, this.canvas.width || 320, this.canvas.height || 240);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    if (
+      width === this.renderWidth
+      && height === this.renderHeight
+      && pixelRatio === this.renderPixelRatio
+    ) {
+      return;
+    }
+
+    this.renderWidth = width;
+    this.renderHeight = height;
+    this.renderPixelRatio = pixelRatio;
+    this.renderer.setPixelRatio(pixelRatio);
+    this.renderer.setSize(width, height, false);
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
   }
 
   setStyle(style = {}) {
@@ -2327,6 +2380,7 @@ export class WizardPreviewRenderer {
     if (!this.figure) {
       return;
     }
+    this.resizeRenderer();
     const sway = Math.sin(this.frame * 0.035) * 0.05;
     const bob = Math.sin(this.frame * 0.05) * 0.04;
     const poseVariant = this.currentStyle?.poseVariant ?? "neutral";
