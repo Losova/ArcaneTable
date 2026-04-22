@@ -2387,13 +2387,13 @@ button,
 
 .spells-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
-  gap: 5px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin-top: 0;
-  max-height: none;
+  max-height: min(28dvh, 286px);
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
+  padding-right: 2px;
   align-content: start;
 }
 
@@ -2401,7 +2401,7 @@ button,
   position: relative;
   background: transparent;
   min-height: 0;
-  padding-bottom: 6px;
+  padding-bottom: 10px;
   overflow: hidden;
 }
 
@@ -2412,13 +2412,13 @@ button,
 }
 
 .spells-panel .combat-strip-head {
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 
 .spell-card {
   position: relative;
-  min-height: 94px;
-  padding: 6px 5px 6px 12px;
+  min-height: 120px;
+  padding: 9px 8px 9px 14px;
   overflow: visible;
   background:
     radial-gradient(circle at top right, rgba(255, 249, 231, 0.4), transparent 24%),
@@ -2480,8 +2480,8 @@ button,
   content: "";
   position: absolute;
   left: 6px;
-  top: 6px;
-  bottom: 6px;
+  top: 8px;
+  bottom: 8px;
   width: 3px;
   background: rgba(107, 67, 32, 0.8);
   box-shadow:
@@ -2514,19 +2514,19 @@ button,
 }
 
 .target-preview {
-  margin-top: 4px;
-  padding: 2px 4px;
+  margin-top: 6px;
+  padding: 4px 6px;
   border: 1px solid rgba(89, 63, 31, 0.22);
   background: rgba(255, 249, 235, 0.42);
   color: #50331f;
-  font-size: 0.64rem;
-  line-height: 1.45;
+  font-size: 0.7rem;
+  line-height: 1.4;
   text-shadow: none;
 }
 
 .spell-topline strong {
-  font-size: clamp(0.68rem, 0.65rem + 0.08vw, 0.78rem);
-  line-height: 1.15;
+  font-size: clamp(0.82rem, 0.78rem + 0.1vw, 0.92rem);
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
@@ -2538,7 +2538,7 @@ button,
 }
 
 .spell-cost {
-  font-size: clamp(0.48rem, 0.46rem + 0.08vw, 0.58rem);
+  font-size: clamp(0.64rem, 0.6rem + 0.08vw, 0.72rem);
   white-space: nowrap;
 }
 
@@ -2558,22 +2558,22 @@ button,
 
 .spell-page-mark {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: start;
-  gap: 5px;
+  gap: 8px;
 }
 
 .spell-sigil {
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: 1px solid rgba(77, 52, 28, 0.65);
   border-radius: 50%;
   background:
     radial-gradient(circle at 35% 35%, rgba(255, 245, 219, 0.95), rgba(220, 190, 131, 0.95));
   color: #412615;
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   line-height: 1;
   text-shadow: none;
   box-shadow:
@@ -2672,15 +2672,15 @@ button,
 .spells-list .secondary-button,
 .spell-card button {
   width: 100%;
-  min-height: 36px;
+  min-height: 40px;
   white-space: normal;
   word-break: break-word;
 }
 
 .spell-card button {
-  min-height: 32px;
-  padding: 6px 8px;
-  font-size: 0.72rem;
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
 }
 
 .action-disabled-reason {
@@ -3000,7 +3000,7 @@ button,
 
 .players-panel {
   flex: 0 0 auto;
-  margin-top: 10px;
+  margin-top: 16px;
   padding-top: 4px;
 }
 
@@ -3010,9 +3010,7 @@ button,
 }
 
 .players-panel-tools {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 12px 8px;
+  display: none;
 }
 
 .players-panel-tools h2 {
@@ -3020,8 +3018,8 @@ button,
 }
 
 .players-panel > .panel-collapse-head {
-  margin: 0 12px 8px;
-  padding: 9px 12px;
+  margin: 0 12px 10px;
+  padding: 12px 14px;
   border: 1px solid rgba(214, 179, 117, 0.26);
   border-radius: 12px;
   background:
@@ -3040,7 +3038,7 @@ button,
   content: "+";
   color: #e6d2a0;
   font-family: "Silkscreen", monospace;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   line-height: 1;
   flex: 0 0 auto;
 }
@@ -3051,14 +3049,14 @@ button,
 
 .players-panel > .panel-collapse-head span {
   color: #f6ecd5;
-  font-size: 0.9rem;
+  font-size: 0.98rem;
   line-height: 1.25;
   flex: 1 1 auto;
 }
 
 .players-panel > .players-list {
   padding: 0 12px 12px;
-  max-height: min(12dvh, 108px);
+  max-height: min(18dvh, 160px);
   overflow: auto;
 }
 
