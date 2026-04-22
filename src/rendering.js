@@ -1670,7 +1670,7 @@ export class TableRenderer {
           }),
         );
         sprite.position.set(anchor.x, anchor.y + 1.35, anchor.z);
-        sprite.scale.set(1.72, 0.54, 1);
+        sprite.scale.set(1.52, 0.48, 1);
         this.labelGroup.add(sprite);
       });
 
@@ -1686,7 +1686,7 @@ export class TableRenderer {
         }),
       );
       discardLabel.position.set(0, 2.08, -0.72);
-      discardLabel.scale.set(2.05, 0.6, 1);
+      discardLabel.scale.set(1.8, 0.52, 1);
       this.labelGroup.add(discardLabel);
 
       const handLabel = new THREE.Sprite(
@@ -1701,7 +1701,7 @@ export class TableRenderer {
         }),
       );
       handLabel.position.set(0, 1.96, 4.8);
-      handLabel.scale.set(2.1, 0.58, 1);
+      handLabel.scale.set(1.88, 0.52, 1);
       this.labelGroup.add(handLabel);
 
       const tableNote = new THREE.Sprite(
@@ -1715,8 +1715,8 @@ export class TableRenderer {
           toneMapped: false,
         }),
       );
-      tableNote.position.set(-3.25, 2.02, -2.45);
-      tableNote.scale.set(1.92, 0.58, 1);
+      tableNote.position.set(-2.6, 2.02, -2.2);
+      tableNote.scale.set(1.64, 0.48, 1);
       this.labelGroup.add(tableNote);
       return;
     }
@@ -1751,7 +1751,7 @@ export class TableRenderer {
         }),
       );
       sprite.position.set(anchor.x, anchor.y + 1.35, anchor.z);
-      sprite.scale.set(1.72, 0.54, 1);
+      sprite.scale.set(1.52, 0.48, 1);
       this.labelGroup.add(sprite);
     });
 
@@ -1771,7 +1771,7 @@ export class TableRenderer {
       }),
     );
     runeLabel.position.set(0, 2.08, -0.72);
-    runeLabel.scale.set(2.05, 0.6, 1);
+    runeLabel.scale.set(1.8, 0.52, 1);
     this.labelGroup.add(runeLabel);
 
     const handLabel = new THREE.Sprite(
@@ -1786,7 +1786,7 @@ export class TableRenderer {
       }),
     );
     handLabel.position.set(0, 1.96, 4.8);
-    handLabel.scale.set(2.1, 0.58, 1);
+    handLabel.scale.set(1.88, 0.52, 1);
     this.labelGroup.add(handLabel);
 
     const tableNote = new THREE.Sprite(
@@ -1806,8 +1806,8 @@ export class TableRenderer {
         toneMapped: false,
       }),
     );
-    tableNote.position.set(-3.25, 2.02, -2.45);
-    tableNote.scale.set(1.92, 0.58, 1);
+    tableNote.position.set(-2.6, 2.02, -2.2);
+    tableNote.scale.set(1.64, 0.48, 1);
     this.labelGroup.add(tableNote);
 
     if (this.targetPreview?.title) {
@@ -1829,7 +1829,7 @@ export class TableRenderer {
         }),
       );
       previewSprite.position.set(previewAnchor.x, previewAnchor.y + 1.15, previewAnchor.z);
-      previewSprite.scale.set(1.9, 0.58, 1);
+      previewSprite.scale.set(1.64, 0.48, 1);
       this.labelGroup.add(previewSprite);
     }
   }

@@ -167,6 +167,81 @@ function compactSpellName(name) {
   return words.length > 2 ? words.slice(0, 2).join(" ") : name;
 }
 
+function toTitleCase(value = "") {
+  return String(value)
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function pokerTurnLabel(state, currentPlayer) {
+  if (state.roundEnded) {
+    return "Round over";
+  }
+  if (state.currentPlayerId === "human") {
+    return "Your turn";
+  }
+  return currentPlayer?.name ?? "Waiting";
+}
+
+function pokerActionHint(state, { humanTurn, targetingStep }) {
+  if (targetingStep) {
+    return targetingStep.prompt ?? "Choose what the spell should affect.";
+  }
+  if (state.roundEnded) {
+    return "This hand is finished.";
+  }
+  if (humanTurn) {
+    if (state.actionState.callAmount > 0) {
+      return `You need ${state.actionState.callAmount} chips to stay in.`;
+    }
+    return "Choose a button below or cast a spell.";
+  }
+  return "The other wizards are deciding.";
+}
+
+function pokerTargetLabel(state, targetingStep) {
+  if (targetingStep) {
+    return toTitleCase(targetingStep.mode?.replaceAll("-", " ") ?? "target");
+  }
+  if (state.actionState.callAmount > 0) {
+    return `Match ${state.actionState.callAmount}`;
+  }
+  return "Nothing yet";
+}
+
+function pokerSpellLabel(state, humanTurn) {
+  if (state.roundEnded) {
+    return "Round over";
+  }
+  if (!humanTurn) {
+    return "Waiting";
+  }
+  if (!state.actionState.canCast) {
+    return "Used this turn";
+  }
+  return "Ready to cast";
+}
+
+function unoTurnLabel(state, currentPlayer) {
+  if (state.roundEnded) {
+    return "Hand over";
+  }
+  if (state.currentPlayerId === "human") {
+    return "Your turn";
+  }
+  return currentPlayer?.name ?? "Waiting";
+}
+
+function unoActionHint(state, humanTurn) {
+  if (state.roundEnded) {
+    return "This hand is finished.";
+  }
+  if (humanTurn) {
+    return state.actionState.hint || "Play a matching card, draw once, or pass.";
+  }
+  return "The other wizards are deciding.";
+}
+
 function currentTargetStep(pendingTargeting) {
   if (!pendingTargeting) {
     return null;
@@ -1740,57 +1815,43 @@ export class UIController {
     this.syncPendingTargeting(state, human);
 
     this.roundLabel.textContent = `${state.round}`;
-    this.phaseLabel.textContent = state.phase.toUpperCase();
+    this.phaseLabel.textContent = toTitleCase(state.phase);
     this.potLabel.textContent = `${state.pot}${fakePotSuffix}`;
     this.recordLabel.textContent = `${state.match.humanWins}-${state.match.humanLosses}-${state.match.humanTies}`;
     this.streakLabel.textContent = `${state.match.winStreak} / ${state.match.bestStreak}`;
     this.seedLabel.textContent = state.dailyChallenge
-      ? `DAILY ${state.dailyChallenge.dateLabel}`.toUpperCase()
-      : state.seedLabel.toUpperCase();
-    this.turnLabel.textContent = state.roundEnded
-      ? "OVER"
-      : state.currentPlayerId === "human"
-        ? "YOU"
-        : (currentPlayer?.name?.split(" ")[0] ?? "WAIT").toUpperCase();
+      ? `Daily ${state.dailyChallenge.dateLabel}`
+      : state.seedLabel;
+    this.turnLabel.textContent = pokerTurnLabel(state, currentPlayer);
     this.handScore.textContent = state.roundEnded
-      ? (state.winnerText || "Hand over")
+      ? (state.winnerText || "This hand is over.")
       : state.humanEvaluation
-        ? state.humanEvaluation.label
-        : "Blind.";
+        ? `Best hand: ${state.humanEvaluation.label}`
+        : "Your hand is hidden right now.";
     this.communityCaption.textContent = state.phaseDescription;
     this.summaryKicker.textContent = state.roundEnded
       ? "Round result"
       : state.tableEvent
-        ? state.tableEvent.name
-        : "Live state";
+        ? "What changed"
+        : "What is happening";
     const targetingStep = currentTargetStep(this.pendingTargeting);
     const humanTurn = state.currentPlayerId === "human" && !state.roundEnded;
     const humanCanAct = humanTurn && (state.actionState.canCheck || state.actionState.canRaise || state.actionState.canFold);
     const latestEntry = state.logEntries[0];
     this.renderer?.setTargetPreview(this.pendingTargeting ? this.buildSceneTargetPreview(state, human) : null);
-    this.actionHint.textContent = this.pendingTargeting
-      ? targetingStep?.prompt ?? this.pendingTargeting.spell.targetPrompt
-      : humanTurn && !state.roundEnded
-        ? ""
-        : state.roundEnded
-          ? ""
-          : "Table thinking.";
-    this.latestEventTitle.textContent = latestEntry?.title ?? "NOW";
-    this.latestEventCopy.textContent = latestEntry?.message ?? "Ready.";
+    this.actionHint.textContent = pokerActionHint(state, { humanTurn, targetingStep });
+    this.latestEventTitle.textContent = "Latest";
+    this.latestEventCopy.textContent = latestEntry?.message ?? "The table is ready for the next move.";
     this.actionStateLabel.textContent = this.pendingTargeting
-      ? "PICK"
+      ? "Choose target"
       : state.roundEnded
-        ? "DONE"
+        ? "Round over"
         : humanTurn
-          ? "LIVE"
-          : "WAIT";
-    this.targetStateLabel.textContent = this.pendingTargeting
-      ? (targetingStep?.mode ?? "pick").replaceAll("-", " ")
-      : state.actionState.callAmount > 0
-        ? `${state.actionState.callAmount}`
-      : "—";
-    this.spellStateLabel.textContent = state.actionState.spellStateLabel;
-    this.newRoundButton.textContent = state.roundEnded ? "Next hand" : "Restart hand";
+          ? "Your turn"
+          : "Waiting";
+    this.targetStateLabel.textContent = pokerTargetLabel(state, targetingStep);
+    this.spellStateLabel.textContent = pokerSpellLabel(state, humanTurn);
+    this.newRoundButton.textContent = state.roundEnded ? "Next hand" : "Redeal";
     this.summaryNextRoundButton.textContent = state.pendingRelicDraft?.choices?.length ? "Choose relic" : "Next round";
     if ((state.runCleared || state.runFailed) && state.roundEnded && !state.pendingRelicDraft?.choices?.length) {
       this.summaryNextRoundButton.textContent = "Start fresh run";
@@ -1838,8 +1899,8 @@ export class UIController {
       .map(
         (phase) => `
           <div class="phase-step ${phase.active ? "active" : ""} ${phase.complete ? "complete" : ""}">
-            <strong>${phase.name.replace(" Rune", "").toUpperCase()}</strong>
-            <span>${phase.complete ? "DONE" : phase.active ? "LIVE" : "NEXT"}</span>
+            <strong>${toTitleCase(phase.name.replace(" Rune", ""))}</strong>
+            <span>${phase.complete ? "Done" : phase.active ? "Live" : "Next"}</span>
           </div>
         `,
       )
@@ -1899,7 +1960,7 @@ export class UIController {
         const compactTag = tags[0]
           || (player.signatureState && player.id !== "human"
             ? `<span class="tag">${player.signatureState}</span>`
-            : `<span class="tag">Ready</span>`);
+            : `<span class="tag">Waiting</span>`);
         const extraTags = tags.slice(1);
         const showdownCards = player.evaluation?.cards?.length
           ? `<div class="card-lineup">${player.evaluation.cards
@@ -2043,18 +2104,14 @@ export class UIController {
       this.showUnoColorPicker(false);
     }
     this.roundLabel.textContent = `${state.round}`;
-    this.phaseLabel.textContent = "WIZARD UNO";
+    this.phaseLabel.textContent = "Wizard Uno";
     this.potLabel.textContent = `${state.deckRemaining ?? 0}`;
     this.recordLabel.textContent = `${state.match.humanWins}-${state.match.humanLosses}-${state.match.humanTies}`;
     this.streakLabel.textContent = `${state.match.winStreak} / ${state.match.bestStreak}`;
     this.seedLabel.textContent = state.dailyChallenge
-      ? `DAILY ${state.dailyChallenge.dateLabel}`.toUpperCase()
-      : state.seedLabel.toUpperCase();
-    this.turnLabel.textContent = state.roundEnded
-      ? "OVER"
-      : state.currentPlayerId === "human"
-        ? "YOU"
-        : (currentPlayer?.name?.split(" ")[0] ?? "WAIT").toUpperCase();
+      ? `Daily ${state.dailyChallenge.dateLabel}`
+      : state.seedLabel;
+    this.turnLabel.textContent = unoTurnLabel(state, currentPlayer);
     this.handScore.textContent = this.selectedUnoCardIndex !== null
       ? cardLabel(human.hand[this.selectedUnoCardIndex])
       : `${human.hand.length} cards left`;
@@ -2064,17 +2121,13 @@ export class UIController {
     this.summaryKicker.textContent = state.roundEnded ? "Round result" : "Discard pile";
     const humanTurn = state.currentPlayerId === "human" && !state.roundEnded;
     const latestEntry = state.logEntries[0];
-    this.actionHint.textContent = humanTurn
-      ? state.actionState.hint
-      : state.roundEnded
-        ? ""
-        : "Table thinking.";
-    this.latestEventTitle.textContent = latestEntry?.title ?? "NOW";
-    this.latestEventCopy.textContent = latestEntry?.message ?? "Ready.";
-    this.actionStateLabel.textContent = state.roundEnded ? "DONE" : humanTurn ? "LIVE" : "WAIT";
+    this.actionHint.textContent = unoActionHint(state, humanTurn);
+    this.latestEventTitle.textContent = "Latest";
+    this.latestEventCopy.textContent = latestEntry?.message ?? "The table is ready for the next move.";
+    this.actionStateLabel.textContent = state.roundEnded ? "Hand over" : humanTurn ? "Your turn" : "Waiting";
     this.targetStateLabel.textContent = state.unoCurrentColor ?? "—";
     this.spellStateLabel.textContent = state.actionState.spellStateLabel;
-    this.newRoundButton.textContent = state.roundEnded ? "Next hand" : "Restart hand";
+    this.newRoundButton.textContent = state.roundEnded ? "Next hand" : "Redeal";
     this.summaryNextRoundButton.textContent = state.roundEnded ? ((state.runCleared || state.runFailed) ? "Start fresh run" : "Next round") : "Next round";
     this.manaLabel.textContent = `${human.hand.length}`;
     this.manaOrbs.innerHTML = manaOrbMarkup(Math.max(0, Math.min(6, human.hand.length)), 6);
@@ -2095,8 +2148,8 @@ export class UIController {
 
     this.phaseTrack.innerHTML = `
       <div class="phase-step active complete">
-        <strong>DISCARD</strong>
-        <span>${state.roundEnded ? "DONE" : "LIVE"}</span>
+        <strong>Discard</strong>
+        <span>${state.roundEnded ? "Done" : "Live"}</span>
       </div>
     `;
 
@@ -2252,7 +2305,7 @@ export class UIController {
         `
       : `
           <div class="summary-banner">
-            <strong>${state.phase}</strong>
+            <strong>${toTitleCase(state.phase)}</strong>
             <p class="summary-copy">${state.phaseDescription}</p>
           </div>
           <div class="turn-order">${state.turnOrderNames
@@ -2269,7 +2322,7 @@ export class UIController {
       ? state.activeEffects
           .map((effect) => `<span class="tag">${effect.label}: ${effect.detail}</span>`)
           .join("")
-      : `<span class="tag">${this.pendingTargeting ? `Picking: ${(targetingStep?.mode ?? this.pendingTargeting.spell.targetMode).replaceAll("-", " ")}` : "No live effects."}</span>`;
+      : `<span class="tag">${this.pendingTargeting ? `Choosing ${String(targetingStep?.mode ?? this.pendingTargeting.spell.targetMode).replaceAll("-", " ")}` : "No effects in play."}</span>`;
   }
 
   renderSpells(human, state) {

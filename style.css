@@ -1036,6 +1036,8 @@ button,
   background:
     radial-gradient(circle at 50% 0%, rgba(106, 74, 133, 0.1), transparent 28%),
     linear-gradient(180deg, #1a131b 0%, #08070a 100%);
+  overflow: hidden;
+  align-items: stretch;
 }
 
 .scene-column {
@@ -1044,6 +1046,7 @@ button,
   gap: 10px;
   min-height: 0;
   min-width: 0;
+  align-items: start;
 }
 
 .scene-header-box,
@@ -1082,6 +1085,7 @@ button,
   display: grid;
   gap: 1px;
   min-width: 0;
+  flex: 1 1 140px;
 }
 
 .scene-tools {
@@ -1089,17 +1093,21 @@ button,
   gap: 6px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  flex: 1 1 180px;
 }
 
 .scene-tools .secondary-button {
-  padding: 5px 7px;
+  padding: 7px 9px;
   font-size: 0.72rem;
+  min-height: 36px;
+  white-space: nowrap;
 }
 
 .combat-panel {
   display: grid;
   gap: 8px;
   padding: 8px 0 10px;
+  min-width: 0;
 }
 
 .combat-head {
@@ -1107,16 +1115,22 @@ button,
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .combat-head-copy {
   display: grid;
   gap: 3px;
   min-width: 0;
+  flex: 1 1 180px;
 }
 
 .combat-head-copy h2 {
-  display: none;
+  display: block;
+  margin: 0;
+  color: #f1ece0;
+  font-size: clamp(0.96rem, 0.9rem + 0.16vw, 1.08rem);
+  line-height: 1.2;
 }
 
 .combat-head-copy span {
@@ -1131,6 +1145,8 @@ button,
   gap: 2px;
   justify-items: end;
   text-align: right;
+  min-width: 0;
+  flex: 0 1 140px;
 }
 
 .combat-meta strong {
@@ -1149,11 +1165,13 @@ button,
 .combat-spells {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .combat-zone {
   display: grid;
   gap: 5px;
+  min-width: 0;
 }
 
 .combat-strip-head {
@@ -1163,7 +1181,13 @@ button,
 }
 
 .combat-label {
-  display: none;
+  display: block;
+  color: #d2c39d;
+  font-size: 0.74rem;
+  line-height: 1.3;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-shadow: none;
 }
 
 .scene-header-box span,
@@ -1390,6 +1414,7 @@ button,
   box-shadow:
     0 0 0 2px #000,
     6px 6px 0 rgba(0, 0, 0, 0.45);
+  overscroll-behavior: contain;
 }
 
 .hud > * {
@@ -1445,6 +1470,7 @@ button,
   background: transparent;
   box-shadow: none;
   position: relative;
+  min-width: 0;
 }
 
 .panel::before {
@@ -1474,6 +1500,7 @@ button,
   justify-content: space-between;
   gap: 10px;
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .panel-heading h2 {
@@ -1511,6 +1538,8 @@ button,
     2px 2px 0 rgba(0, 0, 0, 0.38);
   font-size: clamp(0.88rem, 0.82rem + 0.16vw, 1rem);
   letter-spacing: 0.01em;
+  line-height: 1.2;
+  min-width: 0;
 }
 
 .secondary-button:hover,
@@ -1637,7 +1666,10 @@ button,
 }
 
 .status-box span {
-  display: none;
+  display: block;
+  margin-bottom: 2px;
+  color: #c7bea8;
+  text-shadow: none;
 }
 
 .status-box strong {
@@ -1763,6 +1795,7 @@ button,
   box-shadow: inset 0 0 0 1px rgba(255, 241, 214, 0.04);
   border-radius: 0 10px 10px 0;
   position: relative;
+  min-width: 0;
 }
 
 .player-card::before {
@@ -1930,6 +1963,7 @@ button,
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-top: 0;
+  align-items: stretch;
 }
 
 .subheading {
@@ -1991,6 +2025,7 @@ button,
     0 0 0 1px #000,
     2px 2px 0 rgba(0, 0, 0, 0.42);
   border-radius: 0 10px 10px 0;
+  min-width: 0;
 }
 
 .spell-card.affordable {
@@ -2194,6 +2229,17 @@ button,
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-top: 0;
+  align-items: stretch;
+}
+
+.actions-grid .action-button,
+.spells-list .action-button,
+.spells-list .secondary-button,
+.spell-card button {
+  width: 100%;
+  min-height: 46px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .action-readout {
@@ -2230,7 +2276,12 @@ button,
 }
 
 .latest-event-strip strong {
-  display: none;
+  display: block;
+  margin-bottom: 2px;
+  color: #d7c697;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .latest-event-strip span {
@@ -2249,7 +2300,13 @@ button,
 }
 
 .action-chip span {
-  display: none;
+  display: block;
+  margin-bottom: 2px;
+  color: #c8bea4;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  text-align: center;
 }
 
 .action-chip strong {
@@ -2334,8 +2391,8 @@ button,
 
 .summary-banner strong {
   display: block;
-  font-size: 0.62rem;
-  line-height: 1.6;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .summary-banner.win {
@@ -2433,6 +2490,8 @@ button,
   list-style: none;
   cursor: pointer;
   padding: 10px 12px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .panel-collapse-head::-webkit-details-marker {
@@ -2448,12 +2507,17 @@ button,
   color: #f1ece0;
   font-size: 0.82rem;
   line-height: 1.4;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .panel-collapse-head strong {
   color: #97939e;
   font-size: 0.54rem;
   line-height: 1.4;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .panel-collapsible > .effects-list,
@@ -2588,6 +2652,10 @@ button,
     width: 100%;
   }
 
+  .panel-collapse-head strong {
+    text-align: left;
+  }
+
   .scene-wrap {
     width: 100%;
     max-width: none;
@@ -2663,6 +2731,7 @@ button,
   .scene-tools .secondary-button {
     flex: 1 1 72px;
     min-width: 0;
+    white-space: normal;
   }
 
   .combat-panel,
@@ -2670,6 +2739,15 @@ button,
   .players-panel {
     padding-top: 6px;
     padding-bottom: 6px;
+  }
+
+  .combat-head,
+  .panel-heading,
+  .player-topline,
+  .player-meters,
+  .spell-topline,
+  .spell-bottomline {
+    gap: 8px;
   }
 
   .title-showcase-stage {
