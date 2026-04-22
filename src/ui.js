@@ -73,6 +73,45 @@ const TUTORIAL_CONTENT = {
   ],
 };
 
+const ONBOARDING_STORAGE_KEY = "wizard-table-onboarding-v1";
+
+const ONBOARDING_STEPS = {
+  poker: [
+    {
+      focus: "hand",
+      title: "Start with your cards",
+      copy: "This is your hand. Read these first before you worry about anything else on the table.",
+    },
+    {
+      focus: "actions",
+      title: "Then pick a move",
+      copy: "These three buttons handle the core turn: stay in, raise the table, or fold out.",
+    },
+    {
+      focus: "spells",
+      title: "Spells are your extra trouble",
+      copy: "Your spellbook is optional, but each spell can bend the rules once per turn.",
+    },
+  ],
+  uno: [
+    {
+      focus: "table",
+      title: "Watch the discard",
+      copy: "Match the live card by color or value. This middle stack is the one you obey.",
+    },
+    {
+      focus: "hand",
+      title: "Pick one card",
+      copy: "Tap a card in your hand to focus it. If it matches, tap again to play it.",
+    },
+    {
+      focus: "actions",
+      title: "Draw once, then decide",
+      copy: "In Wizard Uno you can draw once each turn, then either play the new match or pass.",
+    },
+  ],
+};
+
 const FACE_VARIANTS = [
   { id: "calm", name: "Calm" },
   { id: "stern", name: "Stern" },
@@ -148,11 +187,11 @@ function relicCardMarkup(relic, { actionLabel = "TAKE", attrs = "", className = 
 
 function spellSigil(category) {
   return {
-    "card manipulation": "✦",
-    deception: "☽",
-    economy: "◈",
-    disruption: "✕",
-    defense: "▣",
+    "card manipulation": "↻",
+    deception: "◐",
+    economy: "¤",
+    disruption: "☇",
+    defense: "⛨",
     chaos: "※",
   }[category] ?? "✧";
 }
@@ -240,6 +279,133 @@ function unoActionHint(state, humanTurn) {
     return state.actionState.hint || "Play a matching card, draw once, or pass.";
   }
   return "The other wizards are deciding.";
+}
+
+function pokerDecisionFocus(state, { humanTurn, targetingStep }) {
+  if (targetingStep) {
+    return {
+      title: "Choose a target",
+      copy: targetingStep.prompt ?? "Pick what this spell should affect next.",
+    };
+  }
+  if (state.roundEnded) {
+    return {
+      title: "This hand is done",
+      copy: "Check the summary, then deal the next hand when you are ready.",
+    };
+  }
+  if (!humanTurn) {
+    return {
+      title: "Wait for the table",
+      copy: "The other wizards are taking their turn right now.",
+    };
+  }
+  if (state.actionState.callAmount > 0) {
+    return {
+      title: "Stay in or get out",
+      copy: `You need ${state.actionState.callAmount} chips to call. You can also raise or fold.`,
+    };
+  }
+  if (state.actionState.canCast) {
+    return {
+      title: "Pick your line",
+      copy: "You can check, raise, or cast one spell before you lock in the turn.",
+    };
+  }
+  return {
+    title: "Make the table answer",
+    copy: "Your spell is spent, so this turn is about checking or raising cleanly.",
+  };
+}
+
+function unoDecisionFocus(state, { humanTurn, selectedCard }) {
+  if (state.roundEnded) {
+    return {
+      title: "This hand is done",
+      copy: "Check the summary, then start the next hand when you are ready.",
+    };
+  }
+  if (!humanTurn) {
+    return {
+      title: "Wait for the table",
+      copy: "The other wizards are taking their turn right now.",
+    };
+  }
+  if (selectedCard) {
+    return {
+      title: "Play the selected card",
+      copy: `You picked ${cardLabel(selectedCard)}. Play it now if it matches the discard.`,
+    };
+  }
+  if (state.unoHasDrawnThisTurn) {
+    return {
+      title: "Finish the turn",
+      copy: "You already drew. Play the new match if it fits, or pass.",
+    };
+  }
+  return {
+    title: "Match the discard",
+    copy: `Play a ${state.unoCurrentColor} card or a matching value. If nothing fits, draw once.`,
+  };
+}
+
+function pokerDisabledReason(state, { humanTurn, targetingStep }) {
+  if (targetingStep) {
+    return "The action buttons pause while you choose a spell target.";
+  }
+  if (state.roundEnded) {
+    return "This hand is over. Deal the next one when you are ready.";
+  }
+  if (!humanTurn) {
+    return "These buttons wake up on your turn.";
+  }
+  if (!state.actionState.canCheck && state.actionState.callAmount > 0) {
+    return "You do not have enough chips to call, so folding may be your only safe exit.";
+  }
+  if (!state.actionState.canRaise) {
+    return "You cannot raise right now because you do not have enough chips for the next jump.";
+  }
+  if (!state.actionState.canCast) {
+    return state.actionState.spellStateLabel === "Spent"
+      ? "You already cast a spell this turn."
+      : "You do not have enough mana for any spell right now.";
+  }
+  return "Everything you need is ready below.";
+}
+
+function unoDisabledReason(state, { humanTurn, selectedCard, canPlaySelected }) {
+  if (state.roundEnded) {
+    return "This hand is over. Start the next one when you are ready.";
+  }
+  if (!humanTurn) {
+    return "These buttons wake up on your turn.";
+  }
+  if (!selectedCard) {
+    return "Pick a card in your hand before pressing Play.";
+  }
+  if (!canPlaySelected) {
+    return "That card does not match the live color or value.";
+  }
+  if (!state.actionState.canRaise && !state.actionState.canFold) {
+    return "You already finished the draw step for this turn.";
+  }
+  return "Your selected card is live, or you can draw if you want another option.";
+}
+
+function compactRivalSummary(player, isUno = false) {
+  if (player.roundResult === "won") {
+    return isUno ? "Won the hand" : "Won the pot";
+  }
+  if (player.roundResult === "tied") {
+    return "Tied the finish";
+  }
+  if (player.folded || player.roundResult === "folded") {
+    return "Folded out";
+  }
+  if (player.id === "human") {
+    return isUno ? `${player.hand.length} cards left` : `${player.stack} chips`;
+  }
+  return isUno ? `${player.hand.length} cards left` : `${player.stack} chips`;
 }
 
 function currentTargetStep(pendingTargeting) {
@@ -446,6 +612,8 @@ export class UIController {
     this.transitionTimer = null;
     this.phaseStamp = null;
     this.roundSummarySeen = 0;
+    this.onboardingStepIndex = 0;
+    this.onboardingDismissed = this.loadOnboardingDismissed();
     this.presentationSettings = {
       stableVisuals: false,
       reducedFlash: false,
@@ -568,6 +736,14 @@ export class UIController {
     this.manaOrbs = document.getElementById("mana-orbs");
     this.spellsList = document.getElementById("spells-list");
     this.actionHint = document.getElementById("action-hint");
+    this.decisionFocus = document.getElementById("decision-focus");
+    this.decisionFocusTitle = document.getElementById("decision-focus-title");
+    this.decisionFocusCopy = document.getElementById("decision-focus-copy");
+    this.onboardingStrip = document.getElementById("onboarding-strip");
+    this.onboardingTitle = document.getElementById("onboarding-title");
+    this.onboardingCopy = document.getElementById("onboarding-copy");
+    this.onboardingNextButton = document.getElementById("onboarding-next-button");
+    this.onboardingSkipButton = document.getElementById("onboarding-skip-button");
     this.latestEventStrip = document.getElementById("latest-event-strip");
     this.latestEventTitle = document.getElementById("latest-event-title");
     this.latestEventCopy = document.getElementById("latest-event-copy");
@@ -588,7 +764,12 @@ export class UIController {
     this.cameraButton = document.getElementById("camera-button");
     this.codexButton = document.getElementById("codex-button");
     this.settingsButton = document.getElementById("settings-button");
-    this.actionsPanel = document.querySelector(".actions-panel");
+    this.actionsPanel = document.getElementById("actions-panel");
+    this.handZone = document.getElementById("hand-zone");
+    this.tableZone = document.getElementById("table-zone");
+    this.spellsPanel = document.getElementById("spells-panel");
+    this.playersPanel = document.getElementById("players-panel");
+    this.actionDisabledReason = document.getElementById("action-disabled-reason");
     this.debugPanel = document.getElementById("debug-panel");
     this.debugManaButton = document.getElementById("debug-mana-button");
     this.debugSpellsButton = document.getElementById("debug-spells-button");
@@ -645,6 +826,8 @@ export class UIController {
     });
     this.bindButton(this.settingsButton, () => this.showSettings(true));
     this.bindButton(this.closeSettingsButton, () => this.showSettings(false));
+    this.bindButton(this.onboardingNextButton, () => this.advanceOnboarding());
+    this.bindButton(this.onboardingSkipButton, () => this.dismissOnboarding());
     this.bindButton(this.closeUnoColorButton, () => this.showUnoColorPicker(false));
     this.bindButton(this.resetRunButton, () => {
       this.showSettings(false);
@@ -739,6 +922,7 @@ export class UIController {
   refreshTitleGameUI() {
     const selectedGame = this.getSelectedTitleGame();
     const hasFinish = Boolean(this.latestRunFinish);
+    document.body.dataset.gameMode = selectedGame.id;
 
     for (const button of this.tableGrid?.querySelectorAll("[data-table-game]") ?? []) {
       const game = TITLE_TABLE_GAMES[button.dataset.tableGame] ?? TITLE_TABLE_GAMES.poker;
@@ -787,6 +971,9 @@ export class UIController {
     this.phaseStamp = null;
     this.pendingTargeting = null;
     this.pendingDraftSelection = [];
+    if (!this.onboardingDismissed) {
+      this.onboardingStepIndex = 0;
+    }
     this.selectTitleGame(gameType ?? "poker");
     this.seedInput.value = seed ?? "";
     this.chaosToggle.checked = Boolean(chaosMode);
@@ -852,6 +1039,70 @@ export class UIController {
     };
     this.syncSettingsControls();
     this.onPresentationChange?.(this.presentationSettings);
+  }
+
+  loadOnboardingDismissed() {
+    try {
+      return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === "done";
+    } catch {
+      return false;
+    }
+  }
+
+  persistOnboardingDismissed() {
+    try {
+      window.localStorage.setItem(ONBOARDING_STORAGE_KEY, "done");
+    } catch {
+      // Ignore storage issues and keep the session moving.
+    }
+  }
+
+  dismissOnboarding() {
+    this.onboardingDismissed = true;
+    this.persistOnboardingDismissed();
+    this.refreshOnboarding(null);
+  }
+
+  advanceOnboarding() {
+    const gameId = this.getActiveGameId();
+    const steps = ONBOARDING_STEPS[gameId] ?? ONBOARDING_STEPS.poker;
+    if (this.onboardingStepIndex >= steps.length - 1) {
+      this.dismissOnboarding();
+      return;
+    }
+    this.onboardingStepIndex += 1;
+    this.refreshOnboarding(this.game?.getVisibleState?.() ?? null);
+  }
+
+  refreshOnboarding(state = null) {
+    const gameId = state?.gameType === "uno" ? "uno" : this.getActiveGameId();
+    const steps = ONBOARDING_STEPS[gameId] ?? ONBOARDING_STEPS.poker;
+    const visible = !this.onboardingDismissed && !this.titleVisible && Boolean(state?.started) && !state?.roundEnded;
+    const step = steps[Math.min(this.onboardingStepIndex, steps.length - 1)] ?? null;
+
+    this.onboardingStrip?.classList.toggle("hidden", !visible || !step);
+    this.handZone?.classList.remove("coach-focus");
+    this.tableZone?.classList.remove("coach-focus");
+    this.actionsPanel?.classList.remove("coach-focus");
+    this.spellsPanel?.classList.remove("coach-focus");
+    this.playersPanel?.classList.remove("coach-focus");
+
+    if (!visible || !step) {
+      return;
+    }
+
+    this.onboardingTitle.textContent = step.title;
+    this.onboardingCopy.textContent = step.copy;
+    this.onboardingNextButton.textContent = this.onboardingStepIndex >= steps.length - 1 ? "Got it" : "Next tip";
+
+    const targetMap = {
+      hand: this.handZone,
+      table: this.tableZone,
+      actions: this.actionsPanel,
+      spells: this.spellsPanel,
+      rivals: this.playersPanel,
+    };
+    targetMap[step.focus]?.classList.add("coach-focus");
   }
 
   setProfileStats(profile = null) {
@@ -1082,6 +1333,7 @@ export class UIController {
       this.showUnoColorPicker(false);
       this.transitionBanner.classList.add("hidden");
       window.clearTimeout(this.transitionTimer);
+      this.refreshOnboarding(null);
     } else {
       this.showStats(false);
       this.showWardrobe(false);
@@ -1572,6 +1824,7 @@ export class UIController {
       return;
     }
 
+    const isUno = summary.gameType === "uno";
     const winners = summary.winners
       .map((winner) => `<span class="round-summary-chip">${winner.name} / ${winner.hand}</span>`)
       .join("");
@@ -1603,22 +1856,10 @@ export class UIController {
             <span class="run-clear-label">Final rank</span>
             <strong>${finalRank}</strong>
           </div>
-          <div class="round-summary-line">
-            <strong>Tables</strong>
-            <span>3 / 3 cleared</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Best streak</strong>
-            <span>${summary.bestStreak}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>${isUno ? "Final table" : "Final pot"}</strong>
-            <span>${isUno ? (summary.tableName ?? "Wizard Uno") : `${summary.pot} real / ${summary.fakePot} fake`}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Winners</strong>
-            <span>${winners || "No winner recorded."}</span>
-          </div>
+          <div class="round-summary-line"><strong>Cleared</strong><span>All 3 tables</span></div>
+          <div class="round-summary-line"><strong>Best streak</strong><span>${summary.bestStreak}</span></div>
+          <div class="round-summary-line"><strong>${isUno ? "Final table" : "Final pot"}</strong><span>${isUno ? (summary.tableName ?? "Wizard Uno") : `${summary.pot} real / ${summary.fakePot} fake`}</span></div>
+          <div class="round-summary-line"><strong>Winners</strong><span>${winners || "No winner recorded."}</span></div>
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Run it back";
@@ -1634,28 +1875,15 @@ export class UIController {
             <span class="run-clear-label">Loadout</span>
             <strong>${summary.starterLoadout?.name ?? "Plain Deck"}</strong>
           </div>
-          <div class="round-summary-line">
-            <strong>Table</strong>
-            <span>${summary.tableName}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Best streak</strong>
-            <span>${summary.bestStreak}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Mode</strong>
-            <span>Double or Nothing</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Winners</strong>
-            <span>${winners || "No winner recorded."}</span>
-          </div>
+          <div class="round-summary-line"><strong>Table</strong><span>${summary.tableName}</span></div>
+          <div class="round-summary-line"><strong>Best streak</strong><span>${summary.bestStreak}</span></div>
+          <div class="round-summary-line"><strong>Mode</strong><span>Double or Nothing</span></div>
+          <div class="round-summary-line"><strong>Winners</strong><span>${winners || "No winner recorded."}</span></div>
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Run it back";
       this.summaryMenuButton.textContent = "Back to tavern";
     } else {
-      const isUno = summary.gameType === "uno";
       this.roundSummaryBody.innerHTML = `
         <div class="round-summary-grid">
           <div class="summary-banner ${summary.humanResult === "won" ? "win" : summary.humanResult === "tied" ? "tie" : "loss"}">
@@ -1664,38 +1892,11 @@ export class UIController {
               : summary.title}</strong>
             <p>${summary.message}</p>
           </div>
-          <div class="round-summary-line">
-            <strong>Winners</strong>
-            <span>${winners || "No winner recorded."}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Streak</strong>
-            <span>${summary.streak} CURRENT / ${summary.bestStreak} BEST</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>${isUno ? "Deck" : "Pot"}</strong>
-            <span>${isUno ? `${summary.deckRemaining ?? 0} cards left in deck` : `${summary.pot} real / ${summary.fakePot} fake`}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>${isUno ? "Cursed rule" : "Table event"}</strong>
-            <span>${isUno ? (summary.unoModifier?.name ?? "None") : (summary.tableEvent?.name ?? "None")}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Table</strong>
-            <span>${summary.tableAdvance ? `${summary.tableAdvance.from} -> ${summary.tableAdvance.to}` : summary.tableName ?? "Backroom Tavern"}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Mode</strong>
-            <span>${summary.doubleOrNothing ? "Double or Nothing" : summary.chaosMode ? "Chaos mode on" : "Standard table"}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>Loadout</strong>
-            <span>${summary.starterLoadout?.name ?? "Plain Deck"}</span>
-          </div>
-          <div class="round-summary-line">
-            <strong>${isUno ? "Finish" : "Reward"}</strong>
-            <span>${isUno ? "Empty your hand first." : (summary.rewardReady ? "Relic choice ready" : "No extra reward this round")}</span>
-          </div>
+          <div class="round-summary-line"><strong>Winners</strong><span>${winners || "No winner recorded."}</span></div>
+          <div class="round-summary-line"><strong>Streak</strong><span>${summary.streak} current / ${summary.bestStreak} best</span></div>
+          <div class="round-summary-line"><strong>${isUno ? "Key rule" : "Table event"}</strong><span>${isUno ? (summary.unoModifier?.name ?? "Standard discard") : (summary.tableEvent?.name ?? "No special table rule")}</span></div>
+          <div class="round-summary-line"><strong>Next stop</strong><span>${summary.tableAdvance ? `${summary.tableAdvance.from} -> ${summary.tableAdvance.to}` : summary.tableName ?? "Backroom Tavern"}</span></div>
+          <div class="round-summary-line"><strong>Next reward</strong><span>${isUno ? "Start the next hand." : (summary.rewardReady ? "Pick a relic next." : "Deal the next hand.")}</span></div>
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Next round";
@@ -1802,6 +2003,7 @@ export class UIController {
   }
 
   render(state) {
+    document.body.dataset.gameMode = state.gameType === "uno" ? "uno" : "poker";
     const human = state.players.find((player) => player.id === "human");
     const currentPlayer = state.players.find((player) => player.id === state.currentPlayerId);
     const fakePotSuffix = state.fakePot > 0 ? ` / FAKE ${state.fakePot}` : "";
@@ -1838,8 +2040,11 @@ export class UIController {
     const humanTurn = state.currentPlayerId === "human" && !state.roundEnded;
     const humanCanAct = humanTurn && (state.actionState.canCheck || state.actionState.canRaise || state.actionState.canFold);
     const latestEntry = state.logEntries[0];
+    const decisionFocus = pokerDecisionFocus(state, { humanTurn, targetingStep });
     this.renderer?.setTargetPreview(this.pendingTargeting ? this.buildSceneTargetPreview(state, human) : null);
     this.actionHint.textContent = pokerActionHint(state, { humanTurn, targetingStep });
+    this.decisionFocusTitle.textContent = decisionFocus.title;
+    this.decisionFocusCopy.textContent = decisionFocus.copy;
     this.latestEventTitle.textContent = "Latest";
     this.latestEventCopy.textContent = latestEntry?.message ?? "The table is ready for the next move.";
     this.actionStateLabel.textContent = this.pendingTargeting
@@ -1960,7 +2165,7 @@ export class UIController {
         const compactTag = tags[0]
           || (player.signatureState && player.id !== "human"
             ? `<span class="tag">${player.signatureState}</span>`
-            : `<span class="tag">Waiting</span>`);
+            : "");
         const extraTags = tags.slice(1);
         const showdownCards = player.evaluation?.cards?.length
           ? `<div class="card-lineup">${player.evaluation.cards
@@ -1988,7 +2193,7 @@ export class UIController {
             <div class="player-summary">
               <div class="player-topline">
                 <span class="player-name">${player.name}</span>
-                <span class="player-role">Chips ${player.stack}</span>
+                <span class="player-role">${compactRivalSummary(player, false)}</span>
               </div>
             </div>
             <div class="player-tags">${compactTag}</div>
@@ -2046,6 +2251,7 @@ export class UIController {
     this.checkButton.classList.toggle("pulse-action", humanCanAct && !this.pendingTargeting && state.actionState.canCheck);
     this.raiseButton.classList.toggle("pulse-action", humanCanAct && !this.pendingTargeting && state.actionState.canRaise && state.actionState.callAmount === 0);
     this.foldButton.classList.toggle("pulse-action", false);
+    this.actionDisabledReason.textContent = pokerDisabledReason(state, { humanTurn, targetingStep });
 
     if (!this.titleVisible && !this.tutorialOverlay.classList.contains("hidden")) {
       // Leave tutorial state alone mid-match.
@@ -2081,9 +2287,11 @@ export class UIController {
     } else {
       this.hideSpellDraft();
     }
+    this.refreshOnboarding(state);
   }
 
   renderUno(state, human, currentPlayer) {
+    document.body.dataset.gameMode = "uno";
     if (!human) {
       return;
     }
@@ -2121,7 +2329,11 @@ export class UIController {
     this.summaryKicker.textContent = state.roundEnded ? "Round result" : "Discard pile";
     const humanTurn = state.currentPlayerId === "human" && !state.roundEnded;
     const latestEntry = state.logEntries[0];
+    const selectedCard = Number.isInteger(this.selectedUnoCardIndex) ? human.hand[this.selectedUnoCardIndex] : null;
+    const decisionFocus = unoDecisionFocus(state, { humanTurn, selectedCard });
     this.actionHint.textContent = unoActionHint(state, humanTurn);
+    this.decisionFocusTitle.textContent = decisionFocus.title;
+    this.decisionFocusCopy.textContent = decisionFocus.copy;
     this.latestEventTitle.textContent = "Latest";
     this.latestEventCopy.textContent = latestEntry?.message ?? "The table is ready for the next move.";
     this.actionStateLabel.textContent = state.roundEnded ? "Hand over" : humanTurn ? "Your turn" : "Waiting";
@@ -2169,7 +2381,7 @@ export class UIController {
           tags.push(`<span class="tag good">Peek ${cardLabel(player.lastPeek)}</span>`);
         }
 
-        const compactTag = tags[0] || `<span class="tag">${player.hand.length} cards</span>`;
+        const compactTag = tags[0] || "";
         const hiddenLineup = player.id !== "human" && player.hand.length
           ? `<div class="player-hand-lineup">${player.hand
               .map((card) => miniCardMarkup(card))
@@ -2181,7 +2393,7 @@ export class UIController {
             <div class="player-summary">
               <div class="player-topline">
                 <span class="player-name">${player.name}</span>
-                <span class="player-role">Cards ${player.hand.length}</span>
+                <span class="player-role">${compactRivalSummary(player, true)}</span>
               </div>
             </div>
             <div class="player-tags">${compactTag}</div>
@@ -2258,6 +2470,11 @@ export class UIController {
     this.checkButton.textContent = state.actionState.checkLabel;
     this.raiseButton.textContent = state.actionState.raiseLabel;
     this.foldButton.textContent = "Pass";
+    this.actionDisabledReason.textContent = unoDisabledReason(state, {
+      humanTurn,
+      selectedCard,
+      canPlaySelected: Boolean(selectedCard && this.game.canPlayUnoCard(selectedCard)),
+    });
 
     if (state.roundEnded && state.lastRoundSummary?.round && this.roundSummarySeen !== state.lastRoundSummary.round) {
       this.roundSummarySeen = state.lastRoundSummary.round;
@@ -2269,6 +2486,7 @@ export class UIController {
       this.hideRelicDraft();
     }
     this.hideSpellDraft();
+    this.refreshOnboarding(state);
   }
 
   renderSummary(state) {

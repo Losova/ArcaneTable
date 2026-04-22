@@ -51,6 +51,32 @@ body {
     linear-gradient(180deg, #1a131b 0%, #08070a 100%);
 }
 
+body[data-game-mode="uno"] {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(99, 135, 226, 0.16), transparent 26%),
+    radial-gradient(circle at 82% 10%, rgba(233, 115, 114, 0.1), transparent 22%),
+    linear-gradient(180deg, #141723 0%, #07080d 100%);
+}
+
+body[data-game-mode="uno"] .scene-header-box,
+body[data-game-mode="uno"] .decision-focus,
+body[data-game-mode="uno"] .actions-panel.active-turn,
+body[data-game-mode="uno"] .actions-panel.call-pressure {
+  border-color: #6b86cc;
+}
+
+body[data-game-mode="uno"] .hud-bookhead strong,
+body[data-game-mode="uno"] .decision-focus strong,
+body[data-game-mode="uno"] .actions-panel.active-turn .action-chip strong {
+  color: #dfe8ff;
+}
+
+body[data-game-mode="uno"] .spell-card.spent {
+  background:
+    radial-gradient(circle at top right, rgba(232, 239, 255, 0.32), transparent 24%),
+    linear-gradient(180deg, rgba(222, 231, 255, 0.94), rgba(168, 185, 231, 0.94));
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -1140,6 +1166,50 @@ button,
   min-height: 1.2rem;
 }
 
+.decision-focus,
+.onboarding-strip {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(214, 179, 117, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 226, 0.09), rgba(255, 248, 226, 0.04));
+  border-radius: 10px;
+}
+
+.decision-focus strong,
+.onboarding-strip__copy strong {
+  color: #f6e7bd;
+  font-size: clamp(0.88rem, 0.82rem + 0.14vw, 1rem);
+  line-height: 1.2;
+}
+
+.decision-focus span,
+.onboarding-strip__copy span,
+.action-disabled-reason {
+  color: #d4cbba;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-shadow: none;
+}
+
+.onboarding-strip {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.onboarding-strip__copy,
+.onboarding-strip__actions {
+  min-width: 0;
+}
+
+.onboarding-strip__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .combat-meta {
   display: grid;
   gap: 2px;
@@ -1172,6 +1242,19 @@ button,
   display: grid;
   gap: 5px;
   min-width: 0;
+}
+
+.combat-zone.coach-focus,
+.actions-panel.coach-focus,
+.spells-panel.coach-focus,
+.players-panel.coach-focus {
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 0 1px rgba(242, 215, 147, 0.18),
+    0 0 0 1px rgba(242, 215, 147, 0.28);
+  background:
+    linear-gradient(180deg, rgba(69, 55, 30, 0.26), rgba(32, 27, 24, 0.18));
+  padding: 6px;
 }
 
 .combat-strip-head {
@@ -1889,6 +1972,10 @@ button,
   margin-top: 4px;
 }
 
+.player-tags:empty {
+  display: none;
+}
+
 .tag,
 .mini-card {
   padding: 3px 5px;
@@ -2242,6 +2329,11 @@ button,
   word-break: break-word;
 }
 
+.action-disabled-reason {
+  min-height: 1.2rem;
+  margin: 2px 2px 0;
+}
+
 .action-readout {
   display: grid;
   grid-template-columns: 1fr;
@@ -2387,6 +2479,10 @@ button,
 
 .summary-banner {
   padding: 10px;
+}
+
+.settings-lead {
+  margin: 0 0 10px;
 }
 
 .summary-banner strong {
@@ -2538,6 +2634,10 @@ button,
 
 .players-panel-tools {
   padding: 0 12px 8px;
+}
+
+.players-panel-tools h2 {
+  font-size: 0.94rem;
 }
 
 .players-panel > .players-list {
@@ -2748,6 +2848,14 @@ button,
   .spell-topline,
   .spell-bottomline {
     gap: 8px;
+  }
+
+  .onboarding-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-strip__actions {
+    justify-content: flex-start;
   }
 
   .title-showcase-stage {

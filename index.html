@@ -100,18 +100,18 @@
           <summary>Advanced options</summary>
           <div class="title-options">
             <label class="option-stack">
-              <span>TEST SEED</span>
+              <span>Test seed</span>
               <input id="seed-input" type="text" maxlength="32" placeholder="AUTO" />
             </label>
             <label class="option-stack">
-              <span>UI SCALE</span>
+              <span>Text size</span>
               <select id="ui-scale-select">
                 <option value="normal">Normal</option>
                 <option value="large">Large</option>
               </select>
             </label>
             <label class="option-stack">
-              <span>LOADOUT</span>
+              <span>Starter loadout</span>
               <select id="loadout-select">
                 <option value="plain-deck">Plain Deck</option>
                 <option value="loaded-wand">Loaded Wand</option>
@@ -121,27 +121,27 @@
             </label>
             <label class="option-toggle">
               <input id="chaos-toggle" type="checkbox" />
-              <span>CHAOS MODE</span>
+              <span>Chaos mode</span>
             </label>
             <label class="option-toggle">
               <input id="double-toggle" type="checkbox" />
-              <span>DOUBLE OR NOTHING</span>
+              <span>Double or nothing</span>
             </label>
             <label class="option-toggle">
               <input id="debug-toggle" type="checkbox" />
-              <span>DEBUG TOOLS</span>
+              <span>Debug tools</span>
             </label>
             <label class="option-toggle">
               <input id="stable-toggle" type="checkbox" />
-              <span>STABLE VISUALS</span>
+              <span>Stable visuals</span>
             </label>
             <label class="option-toggle">
               <input id="sound-toggle" type="checkbox" checked />
-              <span>SOUND</span>
+              <span>Sound</span>
             </label>
             <label class="option-toggle">
               <input id="flash-toggle" type="checkbox" />
-              <span>REDUCED FLASH</span>
+              <span>Reduced flash</span>
             </label>
           </div>
         </details>
@@ -270,9 +270,10 @@
           <h2>Table settings</h2>
           <button id="close-settings-button" class="secondary-button">Back</button>
         </div>
+        <p class="summary-copy settings-lead">Keep the table readable and calm while you play.</p>
         <div class="title-options settings-options">
           <label class="option-stack">
-            <span>UI SCALE</span>
+            <span>Text size</span>
             <select id="match-ui-scale-select">
               <option value="normal">Normal</option>
               <option value="large">Large</option>
@@ -280,15 +281,15 @@
           </label>
           <label class="option-toggle">
             <input id="match-sound-toggle" type="checkbox" checked />
-            <span>SOUND</span>
+            <span>Sound</span>
           </label>
           <label class="option-toggle">
             <input id="match-stable-toggle" type="checkbox" />
-            <span>STABLE VISUALS</span>
+            <span>Stable visuals</span>
           </label>
           <label class="option-toggle">
             <input id="match-flash-toggle" type="checkbox" />
-            <span>REDUCED FLASH</span>
+            <span>Reduce effects</span>
           </label>
         </div>
         <div class="summary-actions">
@@ -394,24 +395,40 @@
             </div>
           </div>
 
+          <div id="decision-focus" class="decision-focus">
+            <strong id="decision-focus-title">Do this next</strong>
+            <span id="decision-focus-copy">Choose a button below or cast a spell.</span>
+          </div>
+
+          <div id="onboarding-strip" class="onboarding-strip hidden">
+            <div class="onboarding-strip__copy">
+              <strong id="onboarding-title">Quick tour</strong>
+              <span id="onboarding-copy">This is your hand. These are the cards you are playing from.</span>
+            </div>
+            <div class="onboarding-strip__actions">
+              <button id="onboarding-next-button" class="action-button">Next tip</button>
+              <button id="onboarding-skip-button" class="secondary-button">Hide tips</button>
+            </div>
+          </div>
+
           <div id="latest-event-strip" class="latest-event-strip">
             <strong id="latest-event-title">Latest</strong>
             <span id="latest-event-copy">A fresh hand is starting.</span>
           </div>
 
           <div class="combat-cards">
-            <div class="combat-zone">
+            <div id="hand-zone" class="combat-zone">
               <span class="combat-label">Your cards</span>
               <div id="hand-cards" class="hand-cards"></div>
             </div>
-            <div class="combat-zone combat-zone-shared">
+            <div id="table-zone" class="combat-zone combat-zone-shared">
               <span class="combat-label">Table cards</span>
               <span id="community-caption" class="combat-caption">Shared cards</span>
               <div id="community-cards" class="community-cards"></div>
             </div>
           </div>
 
-          <div class="combat-controls actions-panel">
+          <div id="actions-panel" class="combat-controls actions-panel">
             <div class="action-readout">
               <div class="action-chip">
                 <span>STATE</span>
@@ -431,9 +448,10 @@
               <button id="raise-button" class="action-button">Raise</button>
               <button id="fold-button" class="action-button danger">Fold</button>
             </div>
+            <p id="action-disabled-reason" class="action-disabled-reason">Everything is available right now.</p>
           </div>
 
-          <div class="combat-spells spells-panel">
+          <div id="spells-panel" class="combat-spells spells-panel">
             <div class="combat-strip-head">
               <span class="combat-label">Spellbook</span>
             </div>
@@ -450,13 +468,13 @@
           <div id="effects-list" class="effects-list"></div>
         </details>
 
-        <details class="panel panel-collapsible players-panel">
+        <details id="players-panel" class="panel panel-collapsible players-panel">
           <summary class="panel-collapse-head">
             <span>Other wizards</span>
             <strong>Open</strong>
           </summary>
           <div class="panel-heading players-panel-tools">
-            <h2>Other wizards</h2>
+            <h2>Quick rival view</h2>
             <button id="new-round-button" class="secondary-button">New round</button>
           </div>
           <div id="players-list" class="players-list"></div>

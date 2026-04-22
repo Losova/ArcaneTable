@@ -1197,7 +1197,7 @@ export class TableRenderer {
     clearGroup(this.labelGroup);
     this.syncCards(state);
     this.drawPot(state.pot);
-    this.drawActiveMarker(state.currentPlayerId);
+    this.drawActiveMarker(state.currentPlayerId, state);
     this.drawTargetMarker();
     this.drawShowdownFocusMarker(state);
     this.drawWinnerMarkers(state);
@@ -1415,7 +1415,7 @@ export class TableRenderer {
     return group;
   }
 
-  drawActiveMarker(playerId) {
+  drawActiveMarker(playerId, state = null) {
     if (!playerId || !this.playerAnchors[playerId]) {
       return;
     }
@@ -1480,9 +1480,25 @@ export class TableRenderer {
     );
     const tokenAnchor = this.tokenAnchors[playerId] ?? this.playerAnchors[playerId];
     pointer.position.set(tokenAnchor.x, tokenAnchor.y + 1.12, tokenAnchor.z);
-    pointer.scale.set(0.42, 0.42, 1);
-    pointer.userData.pulseBaseScale = 0.42;
+    pointer.scale.set(0.52, 0.52, 1);
+    pointer.userData.pulseBaseScale = 0.52;
     this.activeGroup.add(pointer);
+
+    const playerName = state?.players?.find((player) => player.id === playerId)?.name ?? (playerId === "human" ? "You" : "Wizard");
+    const label = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: createPlaqueTexture({
+          title: playerId === "human" ? "Your move" : "Acting now",
+          subtitle: playerName,
+          accent: `#${color.toString(16).padStart(6, "0")}`,
+        }),
+        transparent: true,
+        toneMapped: false,
+      }),
+    );
+    label.position.set(tokenAnchor.x, tokenAnchor.y + 1.68, tokenAnchor.z);
+    label.scale.set(1.62, 0.46, 1);
+    this.labelGroup.add(label);
   }
 
   drawTargetMarker() {
@@ -1533,6 +1549,21 @@ export class TableRenderer {
     sprite.scale.set(0.36, 0.36, 1);
     sprite.userData.pulseBaseScale = 0.36;
     this.activeGroup.add(sprite);
+
+    const label = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: createPlaqueTexture({
+          title: "Target",
+          subtitle: "Pick this",
+          accent: `#${accent.getHexString()}`,
+        }),
+        transparent: true,
+        toneMapped: false,
+      }),
+    );
+    label.position.set(position.x, position.y + 0.84, position.z);
+    label.scale.set(1.2, 0.34, 1);
+    this.labelGroup.add(label);
   }
 
   drawShowdownFocusMarker(state) {
