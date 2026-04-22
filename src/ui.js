@@ -212,6 +212,14 @@ function toTitleCase(value = "") {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function compactTurnName(name = "") {
+  const cleaned = String(name).replace(/^the\s+/i, "").trim();
+  if (!cleaned) {
+    return "Waiting";
+  }
+  return cleaned.split(/\s+/)[0];
+}
+
 function pokerTurnLabel(state, currentPlayer) {
   if (state.roundEnded) {
     return "Round over";
@@ -219,7 +227,7 @@ function pokerTurnLabel(state, currentPlayer) {
   if (state.currentPlayerId === "human") {
     return "Your turn";
   }
-  return currentPlayer?.name ?? "Waiting";
+  return compactTurnName(currentPlayer?.name);
 }
 
 function pokerActionHint(state, { humanTurn, targetingStep }) {
@@ -268,7 +276,7 @@ function unoTurnLabel(state, currentPlayer) {
   if (state.currentPlayerId === "human") {
     return "Your turn";
   }
-  return currentPlayer?.name ?? "Waiting";
+  return compactTurnName(currentPlayer?.name);
 }
 
 function unoActionHint(state, humanTurn) {
