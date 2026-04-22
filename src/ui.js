@@ -831,19 +831,7 @@ export class UIController {
     });
     this.bindButton(this.closeTutorialButton, () => this.showTutorial(false));
     this.bindButton(this.codexButton, () => this.showCodex(true));
-    this.bindButton(this.homeButton, () => {
-      this.showSettings(false);
-      this.showCodex(false);
-      this.showTutorial(false);
-      this.showStats(false);
-      this.showWardrobe(false);
-      this.showUnoColorPicker(false);
-      this.hideSpellDraft();
-      this.hideRoundSummary();
-      this.hideRelicDraft();
-      this.showTitleScreen(true);
-      this.onReturnToTitle?.();
-    });
+    this.bindButton(this.homeButton, () => this.returnToHomeScreen());
     this.bindButton(this.closeCodexButton, () => this.showCodex(false));
     this.bindButton(this.closeStatsButton, () => this.showStats(false));
     this.bindButton(this.closeWardrobeButton, () => this.showWardrobe(false));
@@ -866,11 +854,7 @@ export class UIController {
 
     this.bindButton(this.summaryNextRoundButton, () => this.startNextRound());
     this.bindButton(this.summaryMenuButton, () => {
-      this.hideRoundSummary();
-      this.hideRelicDraft();
-      this.showTutorial(false);
-      this.showTitleScreen(true);
-      this.onReturnToTitle?.();
+      this.returnToHomeScreen();
     });
 
     this.bindButton(this.debugManaButton, () => this.game.runDebugAction("mana"));
@@ -935,6 +919,21 @@ export class UIController {
 
   markInteraction() {
     this.onUserInteraction?.();
+  }
+
+  returnToHomeScreen() {
+    this.showSettings(false);
+    this.showCodex(false);
+    this.showTutorial(false);
+    this.showStats(false);
+    this.showWardrobe(false);
+    this.showUnoColorPicker(false);
+    this.hideSpellDraft();
+    this.hideRoundSummary();
+    this.hideRelicDraft();
+    this.selectTitleGame("poker");
+    this.showTitleScreen(true);
+    this.onReturnToTitle?.();
   }
 
   getSelectedTitleGame() {
