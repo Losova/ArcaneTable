@@ -2,8 +2,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
 import { DEFAULT_CUSTOMIZATION } from "./customization.js";
 import { SPELL_CATEGORY_COLORS } from "./spells.js";
 
-const RENDER_WIDTH = 480;
-const RENDER_HEIGHT = 360;
+const RENDER_WIDTH = 720;
+const RENDER_HEIGHT = 540;
 const CARD_WIDTH = 0.9;
 const CARD_HEIGHT = 1.28;
 const FOG_COLOR = 0x2b2331;
@@ -69,6 +69,17 @@ function nearestTexture(canvas) {
   texture.generateMipmaps = false;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}
+
+function smoothTexture(canvas) {
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
   return texture;
 }
 
@@ -328,60 +339,60 @@ function createPlaqueTexture({
   ink = "#2f1c10",
 }) {
   const canvas = document.createElement("canvas");
-  canvas.width = 192;
-  canvas.height = 60;
+  canvas.width = 384;
+  canvas.height = 120;
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = true;
 
   ctx.fillStyle = "#1f1215";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#4f3321";
-  ctx.fillRect(2, 2, canvas.width - 4, canvas.height - 4);
+  ctx.fillRect(4, 4, canvas.width - 8, canvas.height - 8);
   ctx.fillStyle = fill;
-  ctx.fillRect(6, 6, canvas.width - 12, canvas.height - 12);
+  ctx.fillRect(12, 12, canvas.width - 24, canvas.height - 24);
 
-  const gradient = ctx.createLinearGradient(0, 6, 0, canvas.height - 6);
+  const gradient = ctx.createLinearGradient(0, 12, 0, canvas.height - 12);
   gradient.addColorStop(0, "rgba(255,244,213,0.92)");
   gradient.addColorStop(1, "rgba(217,188,131,0.92)");
   ctx.fillStyle = gradient;
-  ctx.fillRect(10, 10, canvas.width - 20, canvas.height - 20);
+  ctx.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
 
   ctx.fillStyle = "rgba(122, 88, 49, 0.08)";
-  for (let y = 12; y < canvas.height - 12; y += 6) {
-    ctx.fillRect(12, y, canvas.width - 24, 1);
+  for (let y = 24; y < canvas.height - 24; y += 10) {
+    ctx.fillRect(24, y, canvas.width - 48, 2);
   }
 
   ctx.fillStyle = accent;
-  ctx.fillRect(14, 10, 8, canvas.height - 20);
-  ctx.fillRect(canvas.width - 22, 10, 8, canvas.height - 20);
+  ctx.fillRect(28, 20, 14, canvas.height - 40);
+  ctx.fillRect(canvas.width - 42, 20, 14, canvas.height - 40);
 
   ctx.fillStyle = "rgba(93, 58, 30, 0.18)";
-  for (let x = 28; x < canvas.width - 28; x += 24) {
-    ctx.fillRect(x, 16, 10, 2);
-    ctx.fillRect(x + 4, canvas.height - 18, 10, 2);
+  for (let x = 56; x < canvas.width - 56; x += 42) {
+    ctx.fillRect(x, 30, 18, 3);
+    ctx.fillRect(x + 8, canvas.height - 34, 18, 3);
   }
 
   ctx.fillStyle = "#6a4323";
   const cornerRunes = [
-    [14, 10], [canvas.width - 26, 10], [14, canvas.height - 22], [canvas.width - 26, canvas.height - 22],
+    [28, 20], [canvas.width - 50, 20], [28, canvas.height - 42], [canvas.width - 50, canvas.height - 42],
   ];
   cornerRunes.forEach(([x, y]) => {
-    ctx.fillRect(x, y + 4, 12, 2);
-    ctx.fillRect(x + 4, y, 4, 12);
-    ctx.fillRect(x + 2, y + 2, 8, 8);
+    ctx.fillRect(x, y + 8, 20, 4);
+    ctx.fillRect(x + 8, y, 4, 20);
+    ctx.fillRect(x + 4, y + 4, 12, 12);
   });
 
   ctx.fillStyle = ink;
-  ctx.font = "bold 16px Georgia, serif";
+  ctx.font = "700 30px Georgia, serif";
   ctx.textBaseline = "top";
-  ctx.fillText(String(title).slice(0, 18), 32, 14);
+  ctx.fillText(String(title).slice(0, 20), 64, 24);
   if (subtitle) {
     ctx.fillStyle = "#6b4526";
-    ctx.font = "12px Georgia, serif";
-    ctx.fillText(String(subtitle).slice(0, 24), 32, 33);
+    ctx.font = "18px Georgia, serif";
+    ctx.fillText(String(subtitle).slice(0, 30), 64, 64);
   }
 
-  return nearestTexture(canvas);
+  return smoothTexture(canvas);
 }
 
 function createPointerTexture(color = "#f5e490") {

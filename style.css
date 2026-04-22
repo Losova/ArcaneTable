@@ -1,5 +1,8 @@
 :root {
   color-scheme: dark;
+  --app-gap: 12px;
+  --app-pad: 10px;
+  --scene-max-width: 980px;
   --bg: #130e16;
   --panel: rgba(31, 23, 31, 0.94);
   --panel-border: #8d7450;
@@ -35,10 +38,12 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
 }
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background:
     radial-gradient(circle at 20% 0%, rgba(125, 90, 171, 0.16), transparent 26%),
@@ -234,6 +239,7 @@ button,
   display: grid;
   place-items: center;
   padding: 20px;
+  overflow: auto;
   background: rgba(0, 0, 0, 0.64);
 }
 
@@ -247,6 +253,7 @@ button,
 .title-screen__panel,
 .overlay-card {
   width: min(92vw, 680px);
+  max-height: calc(100dvh - 40px);
   position: relative;
   border: 2px solid #7b603f;
   background:
@@ -257,6 +264,7 @@ button,
     10px 10px 0 rgba(0, 0, 0, 0.46);
   padding: 22px 20px 20px 22px;
   color: var(--white);
+  overflow: auto;
 }
 
 .tutorial-card {
@@ -1019,10 +1027,12 @@ button,
 
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 344px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 29vw, 380px);
+  gap: var(--app-gap);
   height: 100vh;
-  padding: 10px;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: var(--app-pad);
   background:
     radial-gradient(circle at 50% 0%, rgba(106, 74, 133, 0.1), transparent 28%),
     linear-gradient(180deg, #1a131b 0%, #08070a 100%);
@@ -1033,6 +1043,7 @@ button,
   grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
   min-height: 0;
+  min-width: 0;
 }
 
 .scene-header-box,
@@ -1057,7 +1068,7 @@ button,
   gap: 8px;
   flex-wrap: wrap;
   padding: 8px 10px;
-  width: min(100%, 360px);
+  width: min(100%, 420px);
   min-width: 0;
   border-color: #7d6142;
   background:
@@ -1178,7 +1189,7 @@ button,
 .card-meta,
 .log-entry small {
   display: block;
-  font-size: 0.7rem;
+  font-size: clamp(0.74rem, 0.7rem + 0.12vw, 0.86rem);
   letter-spacing: 0.04em;
 }
 
@@ -1196,7 +1207,7 @@ button,
 .spell-topline strong,
 .summary-banner strong {
   color: var(--yellow);
-  text-shadow: 1px 1px 0 #000;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.36);
 }
 
 .scene-header-box strong {
@@ -1213,6 +1224,11 @@ button,
   position: relative;
   display: grid;
   place-items: center;
+  width: min(100%, var(--scene-max-width));
+  max-width: calc((100dvh - 2 * var(--app-pad) - 78px) * 4 / 3);
+  max-height: calc(100dvh - 2 * var(--app-pad) - 78px);
+  margin: 0 auto;
+  align-self: start;
   min-height: 0;
   aspect-ratio: 4 / 3;
   overflow: hidden;
@@ -1262,8 +1278,7 @@ button,
   display: block;
   position: relative;
   z-index: 1;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
   background: transparent;
 }
 
@@ -1279,7 +1294,7 @@ button,
   background:
     linear-gradient(180deg, rgba(245, 229, 192, 0.98), rgba(213, 186, 136, 0.98));
   color: #24160e;
-  font-size: 0.84rem;
+  font-size: clamp(0.84rem, 0.82rem + 0.18vw, 0.96rem);
   line-height: 1.35;
   text-align: center;
   text-shadow: none;
@@ -1365,7 +1380,8 @@ button,
   flex-direction: column;
   gap: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
+  scrollbar-width: thin;
   padding: 12px 14px 12px 20px;
   border: 2px solid #7a5b42;
   background:
@@ -1374,6 +1390,10 @@ button,
   box-shadow:
     0 0 0 2px #000,
     6px 6px 0 rgba(0, 0, 0, 0.45);
+}
+
+.hud > * {
+  min-width: 0;
 }
 
 .hud::before {
@@ -1457,7 +1477,7 @@ button,
 }
 
 .panel-heading h2 {
-  font-size: 0.94rem;
+  font-size: clamp(1rem, 0.94rem + 0.18vw, 1.12rem);
   color: #f1ece0;
   text-shadow: none;
   text-transform: none;
@@ -1465,7 +1485,7 @@ button,
 }
 
 .panel-heading span {
-  font-size: 0.72rem;
+  font-size: clamp(0.78rem, 0.74rem + 0.12vw, 0.9rem);
   line-height: 1.45;
   color: #bcb3a3;
   text-shadow: none;
@@ -1483,13 +1503,13 @@ button,
   background:
     linear-gradient(180deg, #5a4330, #2c1d1f);
   color: #fff2d4;
-  padding: 9px 12px;
+  padding: 10px 12px;
   cursor: pointer;
   text-shadow: none;
   box-shadow:
     inset 0 0 0 1px rgba(255, 232, 196, 0.08),
     2px 2px 0 rgba(0, 0, 0, 0.38);
-  font-size: 0.88rem;
+  font-size: clamp(0.88rem, 0.82rem + 0.16vw, 1rem);
   letter-spacing: 0.01em;
 }
 
@@ -1623,7 +1643,7 @@ button,
 .status-box strong {
   display: block;
   margin-top: 0;
-  font-size: 0.82rem;
+  font-size: clamp(0.84rem, 0.8rem + 0.18vw, 1rem);
   line-height: 1.2;
   color: #f2ede3;
   text-shadow: none;
@@ -1683,8 +1703,8 @@ button,
 }
 
 .mana-orb {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border: 2px solid #22131d;
   background:
     radial-gradient(circle at 35% 35%, #e8fbff 0 18%, #7bd6ff 18% 50%, #2d5db0 50% 78%, #1f1737 78% 100%);
@@ -1794,7 +1814,7 @@ button,
 }
 
 .player-name {
-  font-size: 0.9rem;
+  font-size: clamp(0.94rem, 0.88rem + 0.18vw, 1.06rem);
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -1816,7 +1836,7 @@ button,
 }
 
 .player-meters span {
-  font-size: 0.78rem;
+  font-size: clamp(0.82rem, 0.76rem + 0.12vw, 0.92rem);
   color: #d4cec4;
   text-shadow: none;
 }
@@ -1935,13 +1955,13 @@ button,
 }
 
 .card-rank {
-  font-size: 1.18rem;
+  font-size: clamp(1.12rem, 1.04rem + 0.34vw, 1.4rem);
   line-height: 1.3;
 }
 
 .card-suit,
 .card-wild {
-  font-size: 0.74rem;
+  font-size: clamp(0.74rem, 0.7rem + 0.14vw, 0.86rem);
   line-height: 1.5;
   color: inherit;
   text-shadow: none;
@@ -2044,12 +2064,12 @@ button,
 }
 
 .spell-topline strong {
-  font-size: 0.76rem;
+  font-size: clamp(0.78rem, 0.74rem + 0.12vw, 0.9rem);
   line-height: 1.3;
 }
 
 .spell-cost {
-  font-size: 0.54rem;
+  font-size: clamp(0.58rem, 0.54rem + 0.1vw, 0.7rem);
 }
 
 .relic-pick-button {
@@ -2154,14 +2174,14 @@ button,
   display: block;
   margin-bottom: 6px;
   color: var(--yellow);
-  font-size: 0.84rem;
+  font-size: clamp(0.9rem, 0.84rem + 0.12vw, 1rem);
   line-height: 1.45;
   text-shadow: none;
 }
 
 .spell-tooltip span {
   display: block;
-  font-size: 0.76rem;
+  font-size: clamp(0.82rem, 0.76rem + 0.12vw, 0.94rem);
   line-height: 1.55;
 }
 
@@ -2215,8 +2235,8 @@ button,
 
 .latest-event-strip span {
   margin-top: 0;
-  color: #ddd7cc;
-  font-size: 0.82rem;
+  color: #f0e8d6;
+  font-size: clamp(0.84rem, 0.8rem + 0.14vw, 0.96rem);
   line-height: 1.4;
 }
 
@@ -2235,8 +2255,8 @@ button,
 .action-chip strong {
   display: block;
   margin-top: 0;
-  color: #f1ece0;
-  font-size: 0.82rem;
+  color: #fbf5e7;
+  font-size: clamp(0.84rem, 0.8rem + 0.14vw, 0.96rem);
   line-height: 1.4;
   text-shadow: none;
   text-align: center;
@@ -2341,6 +2361,12 @@ button,
   margin-top: 10px;
 }
 
+.hud,
+.log-list,
+.players-list {
+  scrollbar-color: rgba(201, 164, 101, 0.72) rgba(26, 18, 20, 0.55);
+}
+
 .log-entry {
   padding: 9px;
   overflow-wrap: anywhere;
@@ -2348,7 +2374,7 @@ button,
 
 .log-entry strong {
   display: block;
-  font-size: 0.82rem;
+  font-size: clamp(0.88rem, 0.82rem + 0.12vw, 1rem);
   line-height: 1.5;
   color: var(--yellow);
   text-shadow: none;
@@ -2527,17 +2553,51 @@ button,
 }
 
 @media (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 10px;
+    padding: 8px;
+  }
+
+  .scene-wrap {
+    max-width: calc((100dvh - 16px - 72px) * 4 / 3);
+    max-height: calc(100dvh - 16px - 72px);
+  }
+}
+
+@media (max-width: 980px) {
+  :root {
+    --app-gap: 8px;
+    --app-pad: 8px;
+  }
+
   body {
-    overflow: auto;
+    overflow: hidden;
   }
 
   .app-shell {
     grid-template-columns: 1fr;
-    height: auto;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .scene-column {
+    grid-template-rows: auto minmax(0, 54dvh);
+  }
+
+  .scene-header-box {
+    width: 100%;
   }
 
   .scene-wrap {
-    min-height: 56vh;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    height: 100%;
+  }
+
+  .hud {
+    min-height: 0;
+    max-height: min(38dvh, 420px);
   }
 }
 
@@ -2576,8 +2636,40 @@ button,
     grid-template-columns: 1fr;
   }
 
+  .app-shell {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .scene-column {
+    grid-template-rows: auto minmax(0, 46dvh);
+    gap: 6px;
+  }
+
   .wardrobe-name-row {
     grid-template-columns: 1fr;
+  }
+
+  .hud {
+    padding: 10px 10px 10px 16px;
+    max-height: min(44dvh, 460px);
+  }
+
+  .scene-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .scene-tools .secondary-button {
+    flex: 1 1 72px;
+    min-width: 0;
+  }
+
+  .combat-panel,
+  .status-panel,
+  .players-panel {
+    padding-top: 6px;
+    padding-bottom: 6px;
   }
 
   .title-showcase-stage {
