@@ -1316,8 +1316,8 @@ export class TableRenderer {
     const anchor = this.playerAnchors[ownerId];
     const seatConfig = {
       human: { spreadX: 0.92, spreadZ: 0, tilt: 0.18, yaw: 0 },
-      bluff: { spreadX: 0.2, spreadZ: 0.54, tilt: -0.05, yaw: Math.PI / 5, liftX: 0.06 },
-      frost: { spreadX: 0.2, spreadZ: 0.54, tilt: 0.05, yaw: -Math.PI / 5, liftX: -0.06 },
+      bluff: { spreadX: 0.2, spreadZ: 0.54, tilt: -0.05, yaw: 0, liftX: 0.06 },
+      frost: { spreadX: 0.2, spreadZ: 0.54, tilt: 0.05, yaw: 0, liftX: -0.06 },
       chaos: { spreadX: 0.84, spreadZ: 0, tilt: -0.02, yaw: Math.PI },
     }[ownerId] ?? { spreadX: 0.84, spreadZ: 0, tilt: 0, yaw: 0, liftX: 0 };
 
