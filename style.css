@@ -1267,6 +1267,27 @@ button,
   background: transparent;
 }
 
+.scene-render-warning {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  width: min(88%, 420px);
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 10px 12px;
+  border: 2px solid #7d5b36;
+  background:
+    linear-gradient(180deg, rgba(245, 229, 192, 0.98), rgba(213, 186, 136, 0.98));
+  color: #24160e;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  text-align: center;
+  text-shadow: none;
+  box-shadow:
+    0 0 0 1px #000,
+    4px 4px 0 rgba(0, 0, 0, 0.34);
+}
+
 .floating-text-layer,
 .scanline-overlay {
   position: absolute;

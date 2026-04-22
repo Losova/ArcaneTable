@@ -18,6 +18,7 @@ import { UIController } from "./ui.js";
 
 const canvas = document.getElementById("scene");
 const floatingTextLayer = document.getElementById("floating-text-layer");
+const sceneRenderWarning = document.getElementById("scene-render-warning");
 const bootScreen = document.getElementById("boot-screen");
 const body = document.body;
 const renderer = new TableRenderer(canvas, floatingTextLayer);
@@ -25,6 +26,7 @@ const aiTimers = new Set();
 let lastFrameTime = 0;
 let previousState = null;
 let aiSequenceLock = null;
+let renderFailureNoted = false;
 const playerVoiceStamps = {
   table: null,
   round: null,
@@ -245,6 +247,19 @@ function clearSavedRun() {
   try {
     window.localStorage.removeItem(RUN_STORAGE_KEY);
   } catch {}
+}
+
+function setSceneRenderWarning(message = "") {
+  if (!sceneRenderWarning) {
+    return;
+  }
+  if (!message) {
+    sceneRenderWarning.classList.add("hidden");
+    sceneRenderWarning.textContent = "";
+    return;
+  }
+  sceneRenderWarning.textContent = message;
+  sceneRenderWarning.classList.remove("hidden");
 }
 
 let savedRun = loadSavedRun();
@@ -957,7 +972,21 @@ function tick(now) {
     return;
   }
   lastFrameTime = now;
-  renderer.animate();
+  try {
+    renderer.animate();
+    if (renderFailureNoted) {
+      renderFailureNoted = false;
+      body.classList.remove("render-failed");
+    }
+    setSceneRenderWarning("");
+  } catch (error) {
+    if (!renderFailureNoted) {
+      renderFailureNoted = true;
+      body.classList.add("render-failed");
+      setSceneRenderWarning("The live 3D table hit a render problem. Refresh once. If it stays like this, open the console and send the error.");
+      console.error("Wizard Poker render loop failed:", error);
+    }
+  }
 }
 
 ui.showTitleScreen(true);
