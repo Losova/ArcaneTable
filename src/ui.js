@@ -219,7 +219,7 @@ function spellSigil(category) {
 
 function spellSummaryText(description) {
   const cleaned = description.replace(/^Patch note:\s*/i, "").trim();
-  return cleaned.length > 88 ? `${cleaned.slice(0, 85)}...` : cleaned;
+  return cleaned.length > 58 ? `${cleaned.slice(0, 55)}...` : cleaned;
 }
 
 function compactSpellName(name) {
@@ -959,12 +959,9 @@ export class UIController {
   }
 
   scrollTitleToTop() {
-    if (this.titleScreen) {
-      this.titleScreen.scrollTop = 0;
-    }
-    if (this.titleScreenPanel) {
-      this.titleScreenPanel.scrollTop = 0;
-    }
+    this.titleScreen?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+    this.titleScreenPanel?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+    this.titleHeading?.scrollIntoView?.({ block: "start", inline: "nearest" });
   }
 
   getSelectedTitleGame() {
