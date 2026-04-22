@@ -634,6 +634,7 @@ export class UIController {
     this.titleHeading = document.getElementById("title-heading");
     this.titleCopy = document.getElementById("title-copy");
     this.titleNote = document.getElementById("title-note");
+    this.titleScreenPanel = document.querySelector(".title-screen__panel");
     this.tableSelectionHeadline = document.getElementById("table-selection-headline");
     this.tableGrid = document.getElementById("table-grid");
     this.titleResults = document.getElementById("title-results");
@@ -654,6 +655,7 @@ export class UIController {
     this.wardrobeButton = document.getElementById("wardrobe-button");
     this.statsButton = document.getElementById("stats-button");
     this.titleTutorialButton = document.getElementById("title-tutorial-button");
+    this.titleScrollCue = document.getElementById("title-scroll-cue");
     this.seedInput = document.getElementById("seed-input");
     this.uiScaleSelect = document.getElementById("ui-scale-select");
     this.loadoutSelect = document.getElementById("loadout-select");
@@ -771,6 +773,7 @@ export class UIController {
     this.newRoundButton = document.getElementById("new-round-button");
     this.cameraButton = document.getElementById("camera-button");
     this.codexButton = document.getElementById("codex-button");
+    this.homeButton = document.getElementById("home-button");
     this.settingsButton = document.getElementById("settings-button");
     this.actionsPanel = document.getElementById("actions-panel");
     this.handZone = document.getElementById("hand-zone");
@@ -823,8 +826,24 @@ export class UIController {
     this.bindButton(this.wardrobeButton, () => this.showWardrobe(true));
     this.bindButton(this.statsButton, () => this.showStats(true));
     this.bindButton(this.titleTutorialButton, () => this.showTutorial(true));
+    this.bindButton(this.titleScrollCue, () => {
+      this.titleScreenPanel?.scrollBy({ top: 260, behavior: "smooth" });
+    });
     this.bindButton(this.closeTutorialButton, () => this.showTutorial(false));
     this.bindButton(this.codexButton, () => this.showCodex(true));
+    this.bindButton(this.homeButton, () => {
+      this.showSettings(false);
+      this.showCodex(false);
+      this.showTutorial(false);
+      this.showStats(false);
+      this.showWardrobe(false);
+      this.showUnoColorPicker(false);
+      this.hideSpellDraft();
+      this.hideRoundSummary();
+      this.hideRelicDraft();
+      this.showTitleScreen(true);
+      this.onReturnToTitle?.();
+    });
     this.bindButton(this.closeCodexButton, () => this.showCodex(false));
     this.bindButton(this.closeStatsButton, () => this.showStats(false));
     this.bindButton(this.closeWardrobeButton, () => this.showWardrobe(false));
@@ -1327,9 +1346,13 @@ export class UIController {
   showTitleScreen(visible) {
     this.titleVisible = visible;
     this.titleScreen.classList.toggle("hidden", !visible);
+    this.titleScrollCue?.classList.toggle("hidden", !visible);
     if (visible) {
       this.updateTitleReturnState();
       this.refreshTitleGameUI();
+      if (this.titleScreenPanel) {
+        this.titleScreenPanel.scrollTop = 0;
+      }
       this.pendingTargeting = null;
       this.showSettings(false);
       this.showCodex(false);

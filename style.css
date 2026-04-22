@@ -664,6 +664,57 @@ button,
   margin-top: 18px;
 }
 
+.title-scroll-cue {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 10px auto 6px;
+  padding: 6px 10px 8px;
+  border: 1px solid rgba(214, 179, 117, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 245, 219, 0.08), rgba(255, 245, 219, 0.03));
+  color: #eadab0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 246, 221, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+}
+
+.title-scroll-cue:hover {
+  filter: brightness(1.04);
+}
+
+.title-scroll-cue__label {
+  font-family: "IM Fell English SC", "Cormorant Garamond", serif;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: #eadab0;
+  text-shadow: none;
+}
+
+.title-scroll-cue__glyph {
+  display: block;
+  color: #f7e7ba;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.96rem;
+  line-height: 1;
+  animation: title-scroll-flash 0.8s steps(1, end) infinite;
+}
+
+@keyframes title-scroll-flash {
+  0%,
+  49% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    transform: translateY(3px);
+    opacity: 0.45;
+  }
+}
+
 .title-actions .action-button:disabled,
 .title-actions .secondary-button:disabled {
   opacity: 0.65;
@@ -1127,6 +1178,12 @@ button,
   font-size: 0.72rem;
   min-height: 36px;
   white-space: nowrap;
+}
+
+#home-button {
+  background:
+    linear-gradient(180deg, #7a5838, #341f1f);
+  color: #fff1d2;
 }
 
 .combat-panel {
