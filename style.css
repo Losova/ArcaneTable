@@ -1053,7 +1053,7 @@ button,
 
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(300px, 29vw, 380px);
+  grid-template-columns: minmax(0, 1fr) clamp(320px, 30vw, 390px);
   gap: var(--app-gap);
   height: 100vh;
   height: 100dvh;
@@ -1131,8 +1131,8 @@ button,
 
 .combat-panel {
   display: grid;
-  gap: 8px;
-  padding: 8px 0 10px;
+  gap: 6px;
+  padding: 6px 0 8px;
   min-width: 0;
 }
 
@@ -1169,8 +1169,8 @@ button,
 .decision-focus,
 .onboarding-strip {
   display: grid;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 4px;
+  padding: 8px 10px;
   border: 1px solid rgba(214, 179, 117, 0.24);
   background:
     linear-gradient(180deg, rgba(255, 248, 226, 0.09), rgba(255, 248, 226, 0.04));
@@ -1188,8 +1188,8 @@ button,
 .onboarding-strip__copy span,
 .action-disabled-reason {
   color: #d4cbba;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 0.76rem;
+  line-height: 1.35;
   text-shadow: none;
 }
 
@@ -1255,6 +1255,10 @@ button,
   background:
     linear-gradient(180deg, rgba(69, 55, 30, 0.26), rgba(32, 27, 24, 0.18));
   padding: 6px;
+}
+
+#latest-event-strip {
+  display: none;
 }
 
 .combat-strip-head {
@@ -1487,9 +1491,9 @@ button,
   flex-direction: column;
   gap: 0;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   scrollbar-width: thin;
-  padding: 12px 14px 12px 20px;
+  padding: 10px 12px 10px 18px;
   border: 2px solid #7a5b42;
   background:
     radial-gradient(circle at top right, rgba(119, 82, 164, 0.14), transparent 26%),
@@ -1527,9 +1531,9 @@ button,
 .hud-bookhead {
   display: grid;
   gap: 2px;
-  padding: 0 0 10px;
+  padding: 0 0 8px;
   border-bottom: 1px solid rgba(243, 212, 138, 0.14);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .hud-bookhead span {
@@ -1541,13 +1545,13 @@ button,
 
 .hud-bookhead strong {
   color: #fff0cc;
-  font-size: 0.92rem;
-  line-height: 1.35;
+  font-size: 0.86rem;
+  line-height: 1.2;
   text-shadow: none;
 }
 
 .panel {
-  padding: 8px 0;
+  padding: 6px 0;
   border: 0;
   border-bottom: 1px solid rgba(243, 212, 138, 0.12);
   background: transparent;
@@ -1740,8 +1744,8 @@ button,
 }
 
 .status-box {
-  padding: 5px 7px;
-  min-height: 30px;
+  padding: 4px 6px;
+  min-height: 28px;
   border-color: rgba(243, 212, 138, 0.16);
   background:
     linear-gradient(180deg, rgba(255, 245, 221, 0.09), rgba(255, 245, 221, 0.04));
@@ -2048,7 +2052,7 @@ button,
 .community-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  gap: 5px;
   margin-top: 0;
   align-items: stretch;
 }
@@ -2059,8 +2063,8 @@ button,
 
 .card-tile,
 .community-tile {
-  min-height: 74px;
-  padding: 7px;
+  min-height: 68px;
+  padding: 6px;
   background:
     linear-gradient(180deg, #efe0ba, #d4b984);
   color: #28170f;
@@ -2091,7 +2095,7 @@ button,
 .spells-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  gap: 5px;
   margin-top: 0;
 }
 
@@ -2102,7 +2106,7 @@ button,
 
 .spell-card {
   position: relative;
-  padding: 9px 8px 9px 16px;
+  padding: 8px 7px 8px 15px;
   overflow: visible;
   background:
     radial-gradient(circle at top right, rgba(255, 249, 231, 0.4), transparent 24%),
@@ -2175,8 +2179,8 @@ button,
 }
 
 .target-preview {
-  margin-top: 5px;
-  padding: 3px 5px;
+  margin-top: 4px;
+  padding: 2px 4px;
   border: 1px solid rgba(89, 63, 31, 0.22);
   background: rgba(255, 249, 235, 0.42);
   color: #50331f;
@@ -2314,7 +2318,7 @@ button,
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  gap: 5px;
   margin-top: 0;
   align-items: stretch;
 }
@@ -2324,14 +2328,18 @@ button,
 .spells-list .secondary-button,
 .spell-card button {
   width: 100%;
-  min-height: 46px;
+  min-height: 42px;
   white-space: normal;
   word-break: break-word;
 }
 
 .action-disabled-reason {
   min-height: 1.2rem;
-  margin: 2px 2px 0;
+  margin: 0 2px 0;
+}
+
+.action-disabled-reason:empty {
+  display: none;
 }
 
 .action-readout {
@@ -2633,11 +2641,11 @@ button,
 }
 
 .players-panel-tools {
-  padding: 0 12px 8px;
+  padding: 0 12px 6px;
 }
 
 .players-panel-tools h2 {
-  font-size: 0.94rem;
+  font-size: 0.8rem;
 }
 
 .players-panel > .players-list {
@@ -2766,6 +2774,7 @@ button,
   .hud {
     min-height: 0;
     max-height: min(38dvh, 420px);
+    overflow: auto;
   }
 }
 
@@ -2821,6 +2830,7 @@ button,
   .hud {
     padding: 10px 10px 10px 16px;
     max-height: min(44dvh, 460px);
+    overflow: auto;
   }
 
   .scene-tools {
@@ -2860,5 +2870,44 @@ button,
 
   .title-showcase-stage {
     min-height: 180px;
+  }
+}
+
+@media (max-height: 900px) {
+  .app-shell {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .scene-column {
+    gap: 8px;
+  }
+
+  .combat-panel,
+  .status-panel,
+  .players-panel {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .decision-focus {
+    padding: 7px 9px;
+  }
+
+  .onboarding-strip {
+    display: none;
+  }
+
+  .scene-tools .secondary-button,
+  .secondary-button,
+  .action-button,
+  .spell-card button {
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+
+  .card-tile,
+  .community-tile {
+    min-height: 62px;
   }
 }

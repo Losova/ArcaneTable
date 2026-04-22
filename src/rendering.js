@@ -897,14 +897,14 @@ export class TableRenderer {
     this.deckOrigin = new THREE.Vector3(0, 1.75, -0.1);
     this.playerAnchors = {
       human: new THREE.Vector3(0, 1.34, 3.3),
-      bluff: new THREE.Vector3(-4, 1.26, 0.6),
-      frost: new THREE.Vector3(4, 1.26, 0.6),
+      bluff: new THREE.Vector3(-4.95, 1.26, 0.25),
+      frost: new THREE.Vector3(4.95, 1.26, 0.25),
       chaos: new THREE.Vector3(0, 1.26, -3.35),
     };
     this.tokenAnchors = {
       human: new THREE.Vector3(0, 1.17, 4.05),
-      bluff: new THREE.Vector3(-4.75, 1.15, 0.8),
-      frost: new THREE.Vector3(4.75, 1.15, 0.8),
+      bluff: new THREE.Vector3(-5.85, 1.15, 0.3),
+      frost: new THREE.Vector3(5.85, 1.15, 0.3),
       chaos: new THREE.Vector3(0, 1.15, -4.05),
     };
 
@@ -1143,6 +1143,12 @@ export class TableRenderer {
       const figure = createWizardFigure(style);
       const { group: token, base, arm, offArm, familiar, familiarFlame } = figure;
       token.position.copy(this.tokenAnchors[playerId]);
+      token.rotation.y = {
+        human: Math.PI,
+        bluff: Math.PI / 2,
+        frost: -Math.PI / 2,
+        chaos: 0,
+      }[playerId] ?? 0;
       this.tokenGroup.add(token);
 
       this.tokenActors.set(playerId, {
@@ -1310,10 +1316,10 @@ export class TableRenderer {
     const anchor = this.playerAnchors[ownerId];
     const seatConfig = {
       human: { spreadX: 0.92, spreadZ: 0, tilt: 0.18, yaw: 0 },
-      bluff: { spreadX: 0.76, spreadZ: 0.15, tilt: -0.08, yaw: 0.45 },
-      frost: { spreadX: 0.76, spreadZ: -0.15, tilt: 0.08, yaw: -0.45 },
+      bluff: { spreadX: 0.08, spreadZ: 0.72, tilt: -0.05, yaw: Math.PI / 2, liftX: 0.06 },
+      frost: { spreadX: 0.08, spreadZ: 0.72, tilt: 0.05, yaw: -Math.PI / 2, liftX: -0.06 },
       chaos: { spreadX: 0.84, spreadZ: 0, tilt: -0.02, yaw: Math.PI },
-    }[ownerId] ?? { spreadX: 0.84, spreadZ: 0, tilt: 0, yaw: 0 };
+    }[ownerId] ?? { spreadX: 0.84, spreadZ: 0, tilt: 0, yaw: 0, liftX: 0 };
 
     cards.forEach((card, index) => {
       const rotation = new THREE.Euler(
@@ -1326,7 +1332,7 @@ export class TableRenderer {
         card,
         ownerId,
         position: new THREE.Vector3(
-          anchor.x + (index - 1) * seatConfig.spreadX,
+          anchor.x + (index - 1) * seatConfig.spreadX + (seatConfig.liftX ?? 0),
           anchor.y + index * 0.01,
           anchor.z + (index - 1) * seatConfig.spreadZ,
         ),
@@ -1497,7 +1503,7 @@ export class TableRenderer {
       }),
     );
     label.position.set(tokenAnchor.x, tokenAnchor.y + 1.68, tokenAnchor.z);
-    label.scale.set(1.62, 0.46, 1);
+    label.scale.set(1.42, 0.4, 1);
     this.labelGroup.add(label);
   }
 
@@ -1562,7 +1568,7 @@ export class TableRenderer {
       }),
     );
     label.position.set(position.x, position.y + 0.84, position.z);
-    label.scale.set(1.2, 0.34, 1);
+    label.scale.set(1.02, 0.3, 1);
     this.labelGroup.add(label);
   }
 
@@ -1616,7 +1622,7 @@ export class TableRenderer {
       }),
     );
     plaque.position.set(tokenAnchor.x, tokenAnchor.y + 1.82, tokenAnchor.z);
-    plaque.scale.set(1.68, 0.48, 1);
+    plaque.scale.set(1.48, 0.42, 1);
     this.labelGroup.add(plaque);
   }
 
@@ -1673,38 +1679,13 @@ export class TableRenderer {
         }),
       );
       banner.position.set(tokenAnchor.x, tokenAnchor.y + 1.86, tokenAnchor.z);
-      banner.scale.set(1.72, 0.5, 1);
+      banner.scale.set(1.5, 0.44, 1);
       this.labelGroup.add(banner);
     });
   }
 
   drawSceneLabels(state) {
     if (state.gameType === "uno") {
-      state.players.forEach((player) => {
-        const anchor = this.tokenAnchors[player.id];
-        if (!anchor) {
-          return;
-        }
-
-        const subtitle = player.id === state.currentPlayerId && !state.roundEnded
-          ? "Playing now"
-          : `${player.hand.length} cards left`;
-        const sprite = new THREE.Sprite(
-          new THREE.SpriteMaterial({
-            map: createPlaqueTexture({
-              title: player.id === "human" ? "You" : player.name,
-              subtitle,
-              accent: "#c49a55",
-            }),
-            transparent: true,
-            toneMapped: false,
-          }),
-        );
-        sprite.position.set(anchor.x, anchor.y + 1.35, anchor.z);
-        sprite.scale.set(1.52, 0.48, 1);
-        this.labelGroup.add(sprite);
-      });
-
       const discardLabel = new THREE.Sprite(
         new THREE.SpriteMaterial({
           map: createPlaqueTexture({
@@ -1717,74 +1698,10 @@ export class TableRenderer {
         }),
       );
       discardLabel.position.set(0, 2.08, -0.72);
-      discardLabel.scale.set(1.8, 0.52, 1);
+      discardLabel.scale.set(1.56, 0.46, 1);
       this.labelGroup.add(discardLabel);
-
-      const handLabel = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: createPlaqueTexture({
-            title: "Your hand",
-            subtitle: `${state.humanEvaluation?.label ?? "Cards"}`,
-            accent: "#d0ab68",
-          }),
-          transparent: true,
-          toneMapped: false,
-        }),
-      );
-      handLabel.position.set(0, 1.96, 4.8);
-      handLabel.scale.set(1.88, 0.52, 1);
-      this.labelGroup.add(handLabel);
-
-      const tableNote = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: createPlaqueTexture({
-            title: state.roundEnded ? "Hand over" : "Table note",
-            subtitle: state.roundEnded ? state.winnerText : state.phaseDescription,
-            accent: state.roundEnded ? "#d0ab68" : "#9b7b5a",
-          }),
-          transparent: true,
-          toneMapped: false,
-        }),
-      );
-      tableNote.position.set(-2.6, 2.02, -2.2);
-      tableNote.scale.set(1.64, 0.48, 1);
-      this.labelGroup.add(tableNote);
       return;
     }
-
-    const accentMap = {
-      human: "#d0ab68",
-      bluff: "#c5795b",
-      frost: "#76b7e7",
-      chaos: "#92bf56",
-    };
-
-    state.players.forEach((player) => {
-      const anchor = this.tokenAnchors[player.id];
-      if (!anchor) {
-        return;
-      }
-
-      const subtitle = player.folded
-        ? "Folded"
-        : player.id === state.currentPlayerId && !state.roundEnded
-          ? "Playing now"
-          : `${player.stack} chips / ${player.mana} mana`;
-      const sprite = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: createPlaqueTexture({
-            title: player.id === "human" ? "You" : player.name,
-            subtitle,
-            accent: accentMap[player.id] ?? "#c49a55",
-          }),
-          transparent: true,
-          toneMapped: false,
-        }),
-      );
-      sprite.position.set(anchor.x, anchor.y + 1.35, anchor.z);
-      sprite.scale.set(1.52, 0.48, 1);
-      this.labelGroup.add(sprite);
-    });
 
     const runeLabel = new THREE.Sprite(
       new THREE.SpriteMaterial({
@@ -1794,7 +1711,7 @@ export class TableRenderer {
             ? `Revealing ${state.players.find((player) => player.id === this.showdownSequence.focusPlayerId)?.name ?? "wizard"}`
             : state.roundEnded && state.lastRoundSummary?.winners?.length
               ? `${state.lastRoundSummary.winners[0].name}${state.lastRoundSummary.winners.length > 1 ? " +" : ""} / ${state.lastRoundSummary.winners[0].hand}`
-            : state.phase,
+              : state.phase,
           accent: state.roundEnded ? "#f0cc72" : "#8e7bd4",
         }),
         transparent: true,
@@ -1802,44 +1719,8 @@ export class TableRenderer {
       }),
     );
     runeLabel.position.set(0, 2.08, -0.72);
-    runeLabel.scale.set(1.8, 0.52, 1);
+    runeLabel.scale.set(1.56, 0.46, 1);
     this.labelGroup.add(runeLabel);
-
-    const handLabel = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: createPlaqueTexture({
-          title: "Your hand",
-          subtitle: state.humanEvaluation?.label ?? "Three card hand",
-          accent: "#d0ab68",
-        }),
-        transparent: true,
-        toneMapped: false,
-      }),
-    );
-    handLabel.position.set(0, 1.96, 4.8);
-    handLabel.scale.set(1.88, 0.52, 1);
-    this.labelGroup.add(handLabel);
-
-    const tableNote = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: createPlaqueTexture({
-          title: this.showdownSequence && !this.showdownSequence.completed
-            ? "Table note"
-            : state.roundEnded ? (state.lastRoundSummary?.title ?? "Hand over") : "Table note",
-          subtitle: this.showdownSequence && !this.showdownSequence.completed
-            ? state.players.find((player) => player.id === this.showdownSequence.focusPlayerId)?.evaluation?.label ?? "Reading the table"
-            : state.roundEnded
-              ? state.winnerText
-            : state.tableEvent?.name ?? state.phaseDescription,
-          accent: state.roundEnded ? "#d0ab68" : "#9b7b5a",
-        }),
-        transparent: true,
-        toneMapped: false,
-      }),
-    );
-    tableNote.position.set(-2.6, 2.02, -2.2);
-    tableNote.scale.set(1.64, 0.48, 1);
-    this.labelGroup.add(tableNote);
 
     if (this.targetPreview?.title) {
       const previewAnchor = this.targetPreview.playerId
@@ -1860,7 +1741,7 @@ export class TableRenderer {
         }),
       );
       previewSprite.position.set(previewAnchor.x, previewAnchor.y + 1.15, previewAnchor.z);
-      previewSprite.scale.set(1.64, 0.48, 1);
+      previewSprite.scale.set(1.42, 0.42, 1);
       this.labelGroup.add(previewSprite);
     }
   }

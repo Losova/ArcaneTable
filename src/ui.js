@@ -370,7 +370,7 @@ function pokerDisabledReason(state, { humanTurn, targetingStep }) {
       ? "You already cast a spell this turn."
       : "You do not have enough mana for any spell right now.";
   }
-  return "Everything you need is ready below.";
+  return "";
 }
 
 function unoDisabledReason(state, { humanTurn, selectedCard, canPlaySelected }) {
@@ -389,7 +389,7 @@ function unoDisabledReason(state, { humanTurn, selectedCard, canPlaySelected }) 
   if (!state.actionState.canRaise && !state.actionState.canFold) {
     return "You already finished the draw step for this turn.";
   }
-  return "Your selected card is live, or you can draw if you want another option.";
+  return "";
 }
 
 function compactRivalSummary(player, isUno = false) {
