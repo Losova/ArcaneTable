@@ -1490,21 +1490,6 @@ export class TableRenderer {
     pointer.userData.pulseBaseScale = 0.52;
     this.activeGroup.add(pointer);
 
-    const playerName = state?.players?.find((player) => player.id === playerId)?.name ?? (playerId === "human" ? "You" : "Wizard");
-    const label = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: createPlaqueTexture({
-          title: playerId === "human" ? "Your move" : "Acting now",
-          subtitle: playerName,
-          accent: `#${color.toString(16).padStart(6, "0")}`,
-        }),
-        transparent: true,
-        toneMapped: false,
-      }),
-    );
-    label.position.set(tokenAnchor.x, tokenAnchor.y + 1.68, tokenAnchor.z);
-    label.scale.set(1.42, 0.4, 1);
-    this.labelGroup.add(label);
   }
 
   drawTargetMarker() {
@@ -1556,20 +1541,6 @@ export class TableRenderer {
     sprite.userData.pulseBaseScale = 0.36;
     this.activeGroup.add(sprite);
 
-    const label = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: createPlaqueTexture({
-          title: "Target",
-          subtitle: "Pick this",
-          accent: `#${accent.getHexString()}`,
-        }),
-        transparent: true,
-        toneMapped: false,
-      }),
-    );
-    label.position.set(position.x, position.y + 0.84, position.z);
-    label.scale.set(1.02, 0.3, 1);
-    this.labelGroup.add(label);
   }
 
   drawShowdownFocusMarker(state) {
@@ -1686,63 +1657,23 @@ export class TableRenderer {
 
   drawSceneLabels(state) {
     if (state.gameType === "uno") {
-      const discardLabel = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: createPlaqueTexture({
-            title: "Discard",
-            subtitle: state.communitySlots[0] ? `${state.unoCurrentColor} / ${state.communitySlots[0].rank}` : "Waiting",
-            accent: "#8e7bd4",
-          }),
-          transparent: true,
-          toneMapped: false,
-        }),
-      );
-      discardLabel.position.set(0, 2.08, -0.72);
-      discardLabel.scale.set(1.56, 0.46, 1);
-      this.labelGroup.add(discardLabel);
       return;
     }
-
-    const runeLabel = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: createPlaqueTexture({
-          title: this.showdownSequence && !this.showdownSequence.completed ? "Showdown" : state.roundEnded && state.lastRoundSummary?.title === "Showdown" ? "Showdown" : "Shared cards",
-          subtitle: this.showdownSequence && !this.showdownSequence.completed
-            ? `Revealing ${state.players.find((player) => player.id === this.showdownSequence.focusPlayerId)?.name ?? "wizard"}`
-            : state.roundEnded && state.lastRoundSummary?.winners?.length
-              ? `${state.lastRoundSummary.winners[0].name}${state.lastRoundSummary.winners.length > 1 ? " +" : ""} / ${state.lastRoundSummary.winners[0].hand}`
-              : state.phase,
-          accent: state.roundEnded ? "#f0cc72" : "#8e7bd4",
-        }),
-        transparent: true,
-        toneMapped: false,
-      }),
-    );
-    runeLabel.position.set(0, 2.08, -0.72);
-    runeLabel.scale.set(1.56, 0.46, 1);
-    this.labelGroup.add(runeLabel);
-
-    if (this.targetPreview?.title) {
-      const previewAnchor = this.targetPreview.playerId
-        ? (this.tokenAnchors[this.targetPreview.playerId] ?? new THREE.Vector3(0, 1.2, 0))
-        : this.targetPreview.communityIndex !== undefined
-          ? new THREE.Vector3((this.targetPreview.communityIndex - 1) * 1.05, 1.15, 0.08)
-          : new THREE.Vector3(0, 1.18, 3.7);
-
-      const previewSprite = new THREE.Sprite(
+    if (this.showdownSequence && !this.showdownSequence.completed) {
+      const showdownLabel = new THREE.Sprite(
         new THREE.SpriteMaterial({
           map: createPlaqueTexture({
-            title: this.targetPreview.title,
-            subtitle: this.targetPreview.subtitle ?? "",
-            accent: this.targetPreview.accent ?? "#d0ab68",
+            title: "Showdown",
+            subtitle: `Revealing ${state.players.find((player) => player.id === this.showdownSequence.focusPlayerId)?.name ?? "wizard"}`,
+            accent: "#f0cc72",
           }),
           transparent: true,
           toneMapped: false,
         }),
       );
-      previewSprite.position.set(previewAnchor.x, previewAnchor.y + 1.15, previewAnchor.z);
-      previewSprite.scale.set(1.42, 0.42, 1);
-      this.labelGroup.add(previewSprite);
+      showdownLabel.position.set(0, 2.08, -0.72);
+      showdownLabel.scale.set(1.56, 0.46, 1);
+      this.labelGroup.add(showdownLabel);
     }
   }
 

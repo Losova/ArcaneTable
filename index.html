@@ -317,14 +317,14 @@
       <div class="scene-column">
         <div class="scene-header-box">
           <div class="scene-header-copy">
-            <span>TABLE VIEW</span>
-            <strong>Game table</strong>
+            <span>TABLE</span>
+            <strong>Keep the middle clear</strong>
           </div>
           <div class="scene-tools">
-            <button id="camera-button" class="secondary-button">View</button>
-            <button id="codex-button" class="secondary-button">Codex</button>
+            <button id="camera-button" class="secondary-button">Camera</button>
+            <button id="codex-button" class="secondary-button">Rules</button>
             <button id="home-button" class="secondary-button">Home</button>
-            <button id="settings-button" class="secondary-button">Menu</button>
+            <button id="settings-button" class="secondary-button">Settings</button>
             <button id="help-button" class="secondary-button">Help</button>
           </div>
         </div>
@@ -346,6 +346,10 @@
         </div>
 
         <section class="panel status-panel">
+          <div class="panel-heading compact-panel-heading">
+            <h2>Now</h2>
+            <span>Pot, turn, mana</span>
+          </div>
           <div class="status-grid">
             <div class="status-box">
               <span>ROUND</span>
@@ -391,7 +395,7 @@
         <section class="panel combat-panel">
           <div class="combat-head">
             <div class="combat-head-copy">
-              <h2>Your move</h2>
+              <h2>Actions</h2>
               <span id="action-hint">Choose a button or cast a spell.</span>
             </div>
             <div class="combat-meta">
@@ -458,7 +462,7 @@
 
           <div id="spells-panel" class="combat-spells spells-panel">
             <div class="combat-strip-head">
-              <span class="combat-label">Spellbook</span>
+              <span class="combat-label">Spells</span>
             </div>
             <div id="spells-list" class="spells-list"></div>
           </div>
@@ -475,7 +479,7 @@
 
         <details id="players-panel" class="panel panel-collapsible players-panel">
           <summary class="panel-collapse-head">
-            <span>Other wizards</span>
+            <span>Rivals</span>
             <strong>Open</strong>
           </summary>
           <div class="panel-heading players-panel-tools">

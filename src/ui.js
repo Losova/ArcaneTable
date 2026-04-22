@@ -402,18 +402,18 @@ function unoDisabledReason(state, { humanTurn, selectedCard, canPlaySelected }) 
 
 function compactRivalSummary(player, isUno = false) {
   if (player.roundResult === "won") {
-    return isUno ? "Won the hand" : "Won the pot";
+    return "Won";
   }
   if (player.roundResult === "tied") {
-    return "Tied the finish";
+    return "Tied";
   }
   if (player.folded || player.roundResult === "folded") {
-    return "Folded out";
+    return "Folded";
   }
   if (player.id === "human") {
-    return isUno ? `${player.hand.length} cards left` : `${player.stack} chips`;
+    return isUno ? `${player.hand.length} cards` : `${player.stack} chips`;
   }
-  return isUno ? `${player.hand.length} cards left` : `${player.stack} chips`;
+  return isUno ? `${player.hand.length} cards` : `${player.stack} chips`;
 }
 
 function currentTargetStep(pendingTargeting) {
@@ -1893,7 +1893,7 @@ export class UIController {
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Run it back";
-      this.summaryMenuButton.textContent = "Back to tavern";
+      this.summaryMenuButton.textContent = "Home";
     } else if (summary.runFailed) {
       this.roundSummaryBody.innerHTML = `
         <div class="round-summary-grid run-clear-grid">
@@ -1912,7 +1912,7 @@ export class UIController {
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Run it back";
-      this.summaryMenuButton.textContent = "Back to tavern";
+      this.summaryMenuButton.textContent = "Home";
     } else {
       this.roundSummaryBody.innerHTML = `
         <div class="round-summary-grid">
@@ -1930,7 +1930,7 @@ export class UIController {
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Next round";
-      this.summaryMenuButton.textContent = "Title screen";
+      this.summaryMenuButton.textContent = "Home";
     }
     this.roundSummaryOverlay.classList.remove("hidden");
   }
@@ -2592,11 +2592,11 @@ export class UIController {
           : targetingThis
             ? "Back"
             : (spell.targetSteps?.length || spell.targetMode)
-              ? "Pick"
-              : "Use";
+              ? "Aim"
+              : "Cast";
 
         return `
-          <article class="spell-card spell-${slugify(spell.category)} ${targetingThis ? "selected-target" : ""} ${spell.used ? "spent" : ""} ${!disabled ? "affordable" : ""}" style="--spell-accent:${accent}">
+          <article class="spell-card spell-${slugify(spell.category)} ${targetingThis ? "selected-target" : ""} ${spell.used ? "spent" : ""} ${!disabled ? "affordable" : ""}" style="--spell-accent:${accent}" data-spell-card-id="${spell.id}" ${disabled ? 'aria-disabled="true"' : ""}>
             <div class="spell-page-mark">
               <span class="spell-sigil">${spellSigil(spell.category)}</span>
               <div class="spell-topline">
@@ -2633,6 +2633,29 @@ export class UIController {
       button.addEventListener("click", () => {
         this.markInteraction();
         this.handleSpellButton(button.dataset.spellId, human);
+      });
+    }
+
+    for (const card of this.spellsList.querySelectorAll("article[data-spell-card-id]")) {
+      card.addEventListener("click", (event) => {
+        if (event.target.closest("button")) {
+          return;
+        }
+        const spellId = card.dataset.spellCardId;
+        const spell = human.spells.find((entry) => entry.id === spellId);
+        if (!spell) {
+          return;
+        }
+        const disabled = spell.used
+          || spell.currentCost > human.mana
+          || state.currentPlayerId !== "human"
+          || state.roundEnded
+          || !state.actionState.canCast;
+        if (disabled) {
+          return;
+        }
+        this.markInteraction();
+        this.handleSpellButton(spellId, human);
       });
     }
   }
