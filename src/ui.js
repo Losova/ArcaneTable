@@ -18,6 +18,7 @@ import {
   WIZARD_TITLES,
   EYE_GLOW_OPTIONS,
 } from "./customization.js";
+import { STORAGE_KEYS } from "./config.js";
 import { WizardPreviewRenderer } from "./rendering.js";
 import { SPELL_CATEGORY_COLORS } from "./spells.js";
 
@@ -72,8 +73,6 @@ const TUTORIAL_CONTENT = {
     "5. If you play a Wild or +4, pick the color you want the whole table to obey next.",
   ],
 };
-
-const ONBOARDING_STORAGE_KEY = "wizard-table-onboarding-v1";
 
 const ONBOARDING_STEPS = {
   poker: [
@@ -181,6 +180,28 @@ function relicCardMarkup(relic, { actionLabel = "TAKE", attrs = "", className = 
       </div>
       <p>${relic.description.toUpperCase()}</p>
       <button class="action-button relic-pick-button" ${attrs}>${actionLabel}</button>
+    </article>
+  `;
+}
+
+function spellDraftEntryMarkup(spell, { actionLabel = "Pick", selected = false } = {}) {
+  const accent = SPELL_CATEGORY_COLORS[spell.category] ?? "#ffd84d";
+  const summary = spellSummaryText(spell.description);
+  return `
+    <article class="spell-draft-entry ${selected ? "selected-draft-card" : ""}" data-spell-draft-id="${spell.id}" style="--spell-accent:${accent}">
+      <div class="spell-draft-entry__top">
+        <div class="spell-page-mark">
+          <span class="spell-sigil" aria-hidden="true">${spellSigil(spell.category)}</span>
+          <div class="spell-draft-entry__title">
+            <strong>${spell.name}</strong>
+            <span>${toTitleCase(spell.category)} · ${spell.cost} mana</span>
+          </div>
+        </div>
+        <span class="spell-draft-entry__tag">${selected ? "Locked" : "Open"}</span>
+      </div>
+      <p>${summary}</p>
+      ${spell.backfireNote ? `<small class="spell-draft-entry__warning">Backfire: ${spell.backfireNote}</small>` : ""}
+      <button class="action-button" type="button">${actionLabel}</button>
     </article>
   `;
 }
@@ -922,6 +943,7 @@ export class UIController {
   }
 
   returnToHomeScreen() {
+    const returnGame = this.game?.state?.started ? this.getActiveGameId() : this.selectedTitleGame;
     this.showSettings(false);
     this.showCodex(false);
     this.showTutorial(false);
@@ -931,9 +953,18 @@ export class UIController {
     this.hideSpellDraft();
     this.hideRoundSummary();
     this.hideRelicDraft();
-    this.selectTitleGame("poker");
+    this.selectTitleGame(returnGame);
     this.showTitleScreen(true);
     this.onReturnToTitle?.();
+  }
+
+  scrollTitleToTop() {
+    if (this.titleScreen) {
+      this.titleScreen.scrollTop = 0;
+    }
+    if (this.titleScreenPanel) {
+      this.titleScreenPanel.scrollTop = 0;
+    }
   }
 
   getSelectedTitleGame() {
@@ -1069,7 +1100,7 @@ export class UIController {
 
   loadOnboardingDismissed() {
     try {
-      return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === "done";
+      return window.localStorage.getItem(STORAGE_KEYS.onboarding) === "done";
     } catch {
       return false;
     }
@@ -1077,7 +1108,7 @@ export class UIController {
 
   persistOnboardingDismissed() {
     try {
-      window.localStorage.setItem(ONBOARDING_STORAGE_KEY, "done");
+      window.localStorage.setItem(STORAGE_KEYS.onboarding, "done");
     } catch {
       // Ignore storage issues and keep the session moving.
     }
@@ -1364,6 +1395,10 @@ export class UIController {
       this.transitionBanner.classList.add("hidden");
       window.clearTimeout(this.transitionTimer);
       this.refreshOnboarding(null);
+      this.scrollTitleToTop();
+      window.requestAnimationFrame(() => {
+        this.scrollTitleToTop();
+      });
     } else {
       this.showStats(false);
       this.showWardrobe(false);
@@ -1803,14 +1838,11 @@ export class UIController {
     this.pendingDraftSelection = this.pendingDraftSelection.filter((id) => draft.choices.some((choice) => choice.id === id));
     this.spellDraftKicker.textContent = `Choose ${draft.keep}`;
     this.spellDraftLead.textContent = "Pick the two spells you want guaranteed in the first round.";
+    this.spellDraftList.classList.add("spell-draft-book");
     this.spellDraftList.innerHTML = draft.choices
-      .map((spell) => relicCardMarkup({
-        ...spell,
-        description: `${spell.description}${spell.backfireNote ? ` Backfire: ${spell.backfireNote}` : ""}`,
-      }, {
-        actionLabel: this.pendingDraftSelection.includes(spell.id) ? "LOCKED" : "PICK",
-        className: this.pendingDraftSelection.includes(spell.id) ? "selected-draft-card" : "",
-        attrs: `data-spell-draft-id="${spell.id}"`,
+      .map((spell) => spellDraftEntryMarkup(spell, {
+        actionLabel: this.pendingDraftSelection.includes(spell.id) ? "Locked" : "Pick",
+        selected: this.pendingDraftSelection.includes(spell.id),
       }))
       .join("");
     this.spellDraftConfirmButton.disabled = this.pendingDraftSelection.length !== draft.keep;
@@ -1819,10 +1851,10 @@ export class UIController {
       : `Pick ${draft.keep}`;
     this.spellDraftOverlay.classList.remove("hidden");
 
-    for (const button of this.spellDraftList.querySelectorAll("[data-spell-draft-id]")) {
-      button.addEventListener("click", () => {
+    for (const entry of this.spellDraftList.querySelectorAll("[data-spell-draft-id]")) {
+      entry.addEventListener("click", () => {
         this.markInteraction();
-        const spellId = button.dataset.spellDraftId;
+        const spellId = entry.dataset.spellDraftId;
         if (this.pendingDraftSelection.includes(spellId)) {
           this.pendingDraftSelection = this.pendingDraftSelection.filter((id) => id !== spellId);
         } else if (this.pendingDraftSelection.length < draft.keep) {
@@ -1836,6 +1868,7 @@ export class UIController {
   }
 
   hideSpellDraft() {
+    this.spellDraftList?.classList.remove("spell-draft-book");
     this.spellDraftOverlay.classList.add("hidden");
   }
 

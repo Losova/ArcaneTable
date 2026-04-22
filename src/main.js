@@ -12,6 +12,7 @@ import {
   resolveCustomizationStyleWithOverrides,
   WIZARD_TITLES,
 } from "./customization.js";
+import { APP_META, BUILD_STAMP, STORAGE_KEYS } from "./config.js";
 import { WizardPokerGame } from "./game.js";
 import { TableRenderer } from "./rendering.js";
 import { UIController } from "./ui.js";
@@ -20,6 +21,7 @@ const canvas = document.getElementById("scene");
 const floatingTextLayer = document.getElementById("floating-text-layer");
 const sceneRenderWarning = document.getElementById("scene-render-warning");
 const bootScreen = document.getElementById("boot-screen");
+const buildStamp = document.getElementById("build-stamp");
 const body = document.body;
 const renderer = new TableRenderer(canvas, floatingTextLayer);
 const aiTimers = new Set();
@@ -32,9 +34,6 @@ const playerVoiceStamps = {
   round: null,
   result: null,
 };
-const PROFILE_STORAGE_KEY = "wizard-poker-profile-v1";
-const SETTINGS_STORAGE_KEY = "wizard-poker-settings-v1";
-const RUN_STORAGE_KEY = "wizard-poker-run-v1";
 
 const AI_LOG_MOOD = {
   bluff: "deception",
@@ -114,6 +113,9 @@ function emitPlayerLoadoutFlavor(previous, state) {
 
 function createDefaultProfile() {
   return {
+    storageVersion: APP_META.storageSchemaVersion,
+    appVersion: APP_META.version,
+    updatedAt: null,
     runsStarted: 0,
     runsCleared: 0,
     dailyRuns: 0,
@@ -138,6 +140,9 @@ function createDefaultProfile() {
 
 function createDefaultSettings() {
   return {
+    storageVersion: APP_META.storageSchemaVersion,
+    appVersion: APP_META.version,
+    updatedAt: null,
     uiScale: "normal",
     stableVisuals: false,
     reducedFlash: false,
@@ -145,9 +150,26 @@ function createDefaultSettings() {
   };
 }
 
+function stampStoredRecord(record = {}) {
+  return {
+    ...record,
+    storageVersion: APP_META.storageSchemaVersion,
+    appVersion: APP_META.version,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function cloneForDev(data) {
+  try {
+    return JSON.parse(JSON.stringify(data));
+  } catch {
+    return null;
+  }
+}
+
 function loadProfile() {
   try {
-    const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEYS.profile);
     if (!raw) {
       return createDefaultProfile();
     }
@@ -191,7 +213,7 @@ function loadProfile() {
 
 function loadSettings() {
   try {
-    const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEYS.settings);
     if (!raw) {
       return createDefaultSettings();
     }
@@ -206,7 +228,7 @@ function loadSettings() {
 
 function saveProfile(profile) {
   try {
-    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    window.localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(stampStoredRecord(profile)));
   } catch {}
 }
 
@@ -224,14 +246,18 @@ function currentProfileStyle() {
 
 function saveSettings(settingsState) {
   try {
-    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsState));
+    window.localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(stampStoredRecord(settingsState)));
   } catch {}
 }
 
 function loadSavedRun() {
   try {
-    const raw = window.localStorage.getItem(RUN_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw = window.localStorage.getItem(STORAGE_KEYS.run);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    return parsed?.snapshot ?? parsed;
   } catch {
     return null;
   }
@@ -239,13 +265,13 @@ function loadSavedRun() {
 
 function saveRun(snapshot) {
   try {
-    window.localStorage.setItem(RUN_STORAGE_KEY, JSON.stringify(snapshot));
+    window.localStorage.setItem(STORAGE_KEYS.run, JSON.stringify(stampStoredRecord(snapshot)));
   } catch {}
 }
 
 function clearSavedRun() {
   try {
-    window.localStorage.removeItem(RUN_STORAGE_KEY);
+    window.localStorage.removeItem(STORAGE_KEYS.run);
   } catch {}
 }
 
@@ -966,6 +992,34 @@ function bootSequence() {
   }, 2000);
 }
 
+function attachDevSurface() {
+  window.wizardTableDev = {
+    app: APP_META,
+    game,
+    ui,
+    renderer,
+    audio,
+    getVisibleState: () => cloneForDev(game.getVisibleState()),
+    getInternalState: () => cloneForDev(game.state),
+    getProfile: () => cloneForDev(profile),
+    getSettings: () => cloneForDev(settings),
+    getSavedRun: () => cloneForDev(loadSavedRun()),
+    saveCurrentRun: () => {
+      const snapshot = game.exportSaveState();
+      savedRun = snapshot;
+      saveRun(snapshot);
+      ui.setResumeAvailable(savedRun);
+      return cloneForDev(snapshot);
+    },
+    clearSavedRun: () => {
+      clearSavedRun();
+      savedRun = null;
+      ui.setResumeAvailable(null);
+    },
+    refreshUi: () => ui.render(game.getVisibleState()),
+  };
+}
+
 function tick(now) {
   window.requestAnimationFrame(tick);
   if (now - lastFrameTime < 1000 / 30) {
@@ -995,7 +1049,12 @@ ui.hideRoundSummary();
 renderer.setPresentationSettings({ stableVisuals: settings.stableVisuals, reducedFlash: settings.reducedFlash });
 body.classList.toggle("reduced-flash", Boolean(settings.reducedFlash));
 body.dataset.uiScale = settings.uiScale || "normal";
+body.dataset.appVersion = APP_META.version;
+if (buildStamp) {
+  buildStamp.textContent = `${APP_META.collectionName} build ${BUILD_STAMP}`;
+}
 ui.render(game.getVisibleState());
+attachDevSurface();
 window.requestAnimationFrame(tick);
 bootSequence();
 
@@ -1003,5 +1062,6 @@ if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     clearAiTimers();
     aiSequenceLock = null;
+    delete window.wizardTableDev;
   });
 }

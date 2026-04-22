@@ -30,6 +30,51 @@ This project now includes:
 - [.gitignore](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/.gitignore) for a clean GitHub repo
 - [vercel.json](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/vercel.json) so Vercel treats the project as an explicit static deploy
 
+## Development
+
+This build is now set up as a cleaner `v1` foundation, not just a jam prototype.
+
+Core development additions:
+
+- [src/config.js](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/src/config.js) is the single source of truth for app metadata, versioning, and browser storage keys.
+- Local browser data is now stamped with storage metadata so future migrations have a safer place to start.
+- A lightweight browser console helper is available at `window.wizardTableDev` for inspection and quick iteration.
+
+Useful local checks:
+
+```bash
+npm run check
+npm run test:smoke
+```
+
+Expanded equivalents:
+
+```bash
+node --check src/main.js
+node --check src/ui.js
+node --check src/rendering.js
+node --check src/game.js
+node --check src/ai.js
+node --check src/spells.js
+```
+
+Useful dev console helpers:
+
+- `window.wizardTableDev.getVisibleState()`
+- `window.wizardTableDev.getInternalState()`
+- `window.wizardTableDev.getProfile()`
+- `window.wizardTableDev.getSettings()`
+- `window.wizardTableDev.saveCurrentRun()`
+- `window.wizardTableDev.clearSavedRun()`
+- `window.wizardTableDev.refreshUi()`
+
+Version-one priorities from here:
+
+- tighten remaining gameplay balance between Poker and Uno
+- move repeated UI strings into a shared content layer
+- add a proper test harness for deterministic game-state checks
+- separate rendering-only state from game rules even further
+
 Start flow:
 
 1. Wait through the `WIZCORP ENTERTAINMENT` boot screen.
@@ -189,6 +234,7 @@ UI support:
 
 - [index.html](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/index.html): static shell, HUD regions, overlays, and start screen markup
 - [style.css](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/style.css): PS2 UI styling, overlay styles, responsive rules, and impact effects
+- [src/config.js](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/src/config.js): app metadata, build version, and storage-key definitions
 - [src/main.js](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/src/main.js): app bootstrap, audio hooks, title flow, and AI turn scheduling
 - [src/game.js](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/src/game.js): core game state, daily modifiers, relics, turn logic, round flow, summaries, streaks, and seeded randomness
 - [src/rendering.js](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/src/rendering.js): Three.js scene, low-res renderer, tokens, cards, VFX, and camera behavior

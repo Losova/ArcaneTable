@@ -1,0 +1,9 @@
+{
+  "name": "arcane-table",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/config.js && node --check src/main.js && node --check src/ui.js && node --check src/rendering.js && node --check src/game.js && node --check src/ai.js && node --check src/spells.js",
+    "test:smoke": "node ./scripts/smoke-test.mjs"
+  }
+}
