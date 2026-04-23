@@ -25,7 +25,7 @@ import { SPELL_CATEGORY_COLORS } from "./spells.js";
 const TITLE_TABLE_GAMES = {
   poker: {
     id: "poker",
-    name: "Wizard Poker",
+    name: "Arcane Table",
     kicker: "Arcane card table. Three rivals. One pot.",
     copy: "Draw cards, spend mana, and survive the table.",
     note: "Check, raise, fold, or cast. That is the whole problem.",
@@ -1022,7 +1022,7 @@ export class UIController {
     }
 
     this.startButton.textContent = hasFinish ? "Run it back" : "Play";
-    const resumeGameType = this.resumeSnapshot?.state?.gameType === "uno" ? "Wizard Uno" : "Wizard Poker";
+    const resumeGameType = this.resumeSnapshot?.state?.gameType === "uno" ? "Wizard Uno" : "Arcane Table";
     this.continueButton.textContent = `Continue ${resumeGameType}`;
     this.titleKicker.textContent = hasFinish
       ? "Tavern cleared. WIZCORP remains concerned."

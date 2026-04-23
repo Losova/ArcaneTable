@@ -1,6 +1,6 @@
 export const APP_META = Object.freeze({
   collectionName: "Arcane Table",
-  displayName: "Wizard Poker",
+  displayName: "Arcane Table",
   version: "1.0.0-dev",
   channel: "V1 foundation",
   storageSchemaVersion: 2,

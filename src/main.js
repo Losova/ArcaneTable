@@ -1038,7 +1038,7 @@ function tick(now) {
       renderFailureNoted = true;
       body.classList.add("render-failed");
       setSceneRenderWarning("The live 3D table hit a render problem. Refresh once. If it stays like this, open the console and send the error.");
-      console.error("Wizard Poker render loop failed:", error);
+      console.error("Arcane Table render loop failed:", error);
     }
   }
 }
