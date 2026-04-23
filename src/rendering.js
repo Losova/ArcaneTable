@@ -882,6 +882,8 @@ export class TableRenderer {
     this.spellPouchGroup = null;
     this.spellPouchHitMesh = null;
     this.spellPouchTag = null;
+    this.spellPouchHalo = null;
+    this.spellPouchReady = false;
 
     this.tableGroup = new THREE.Group();
     this.roomGroup = new THREE.Group();
@@ -1082,6 +1084,18 @@ export class TableRenderer {
     );
     pouchTie.rotation.x = Math.PI / 2;
     pouchTie.position.y = 0.38;
+    const pouchHalo = new THREE.Mesh(
+      new THREE.CircleGeometry(0.54, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0xd7c189,
+        transparent: true,
+        opacity: 0.16,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    pouchHalo.rotation.x = -Math.PI / 2;
+    pouchHalo.position.set(0, 0.02, 0);
     const pouchTag = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: createPlaqueTexture({
@@ -1104,10 +1118,11 @@ export class TableRenderer {
       }),
     );
     hitMesh.position.set(0, 0.46, 0);
-    this.spellPouchGroup.add(pouchBody, pouchNeck, pouchTie, pouchTag, hitMesh);
+    this.spellPouchGroup.add(pouchHalo, pouchBody, pouchNeck, pouchTie, pouchTag, hitMesh);
     this.spellPouchGroup.position.set(3.18, 1.19, 3.02);
     this.spellPouchGroup.rotation.y = -0.52;
     this.tableGroup.add(this.spellPouchGroup);
+    this.spellPouchHalo = pouchHalo;
     this.spellPouchTag = pouchTag;
     this.spellPouchHitMesh = hitMesh;
     this.addJitterTarget(pouchBody, 0.008);
@@ -1266,6 +1281,12 @@ export class TableRenderer {
     this.syncShowdownSequence(state);
     this.chaosMode = Boolean(state.chaosMode);
     this.spellPouchInteractive = Boolean(state.started && state.gameType !== "uno");
+    this.spellPouchReady = Boolean(
+      this.spellPouchInteractive
+      && !state.roundEnded
+      && state.currentPlayerId === "human"
+      && state.actionState?.canCast,
+    );
     if (this.spellPouchGroup) {
       this.spellPouchGroup.visible = this.spellPouchInteractive;
     }
@@ -2134,9 +2155,24 @@ export class TableRenderer {
       const hoverLift = this.hoveredPouch ? 0.05 : 0;
       this.spellPouchGroup.position.y = quantize(pouchBaseY + Math.sin(this.frame * 0.08) * 0.018 + hoverLift, 1 / 96);
       this.spellPouchGroup.rotation.z = quantize(Math.sin(this.frame * 0.05) * 0.016, 1 / 192);
-      const tagScale = this.hoveredPouch ? 1.18 : 1.12;
+      if (this.spellPouchHalo) {
+        const pulse = this.spellPouchReady ? (Math.sin(this.frame * 0.12) * 0.08 + 1) : 1;
+        const haloScale = this.hoveredPouch
+          ? 1.2
+          : this.spellPouchReady
+            ? 1.08 * pulse
+            : 0.96;
+        this.spellPouchHalo.scale.setScalar(haloScale);
+        this.spellPouchHalo.material.opacity = this.hoveredPouch
+          ? 0.32
+          : this.spellPouchReady
+            ? 0.22
+            : 0.1;
+      }
+      const tagScale = this.hoveredPouch ? 1.18 : this.spellPouchReady ? 1.15 : 1.1;
       if (this.spellPouchTag) {
         this.spellPouchTag.scale.set(tagScale, tagScale * 0.32, 1);
+        this.spellPouchTag.material.opacity = this.spellPouchReady ? 1 : 0.88;
       }
     }
 

@@ -2421,6 +2421,10 @@ button,
 }
 
 .spell-pouch-note {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
   padding: 12px 14px;
   border: 1px solid rgba(214, 179, 117, 0.22);
   border-radius: 12px;
@@ -2430,6 +2434,58 @@ button,
   font-size: 0.88rem;
   line-height: 1.45;
   text-shadow: none;
+}
+
+.spell-pouch-note__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.spell-pouch-note__copy strong {
+  color: #f4e6bf;
+  font-size: 0.92rem;
+  line-height: 1.15;
+  text-shadow: none;
+}
+
+.spell-pouch-note__copy span {
+  color: #d8ccb2;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-shadow: none;
+}
+
+.spell-pouch-note .secondary-button {
+  min-width: 112px;
+  min-height: 38px;
+  padding-inline: 12px;
+  white-space: nowrap;
+}
+
+.spell-pouch-note.ready {
+  border-color: rgba(224, 198, 125, 0.44);
+  background:
+    radial-gradient(circle at right center, rgba(255, 233, 177, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(74, 59, 34, 0.4), rgba(255, 248, 226, 0.05));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 241, 205, 0.06),
+    0 0 0 1px rgba(224, 198, 125, 0.08);
+}
+
+.spell-pouch-note.ready .spell-pouch-note__copy strong {
+  color: #fff0c6;
+}
+
+.spell-pouch-note.waiting {
+  opacity: 0.9;
+}
+
+.spell-pouch-note.targeting {
+  border-color: rgba(159, 191, 246, 0.34);
+  background:
+    radial-gradient(circle at right center, rgba(148, 199, 255, 0.1), transparent 26%),
+    linear-gradient(180deg, rgba(40, 44, 63, 0.36), rgba(255, 248, 226, 0.04));
 }
 
 .spells-panel .combat-strip-head,
@@ -3298,6 +3354,14 @@ button,
   .spell-pouch-list,
   .spell-draft-book {
     grid-template-columns: 1fr;
+  }
+
+  .spell-pouch-note {
+    grid-template-columns: 1fr;
+  }
+
+  .spell-pouch-note .secondary-button {
+    width: 100%;
   }
 
   .scene-header-box {

@@ -770,6 +770,9 @@ export class UIController {
     this.manaLabel = document.getElementById("mana-label");
     this.manaOrbs = document.getElementById("mana-orbs");
     this.spellPouchNote = document.getElementById("spell-pouch-note");
+    this.spellPouchNoteTitle = document.getElementById("spell-pouch-note-title");
+    this.spellPouchNoteCopy = document.getElementById("spell-pouch-note-copy");
+    this.openSpellPouchButton = document.getElementById("open-spell-pouch-button");
     this.actionHint = document.getElementById("action-hint");
     this.decisionFocus = document.getElementById("decision-focus");
     this.decisionFocusTitle = document.getElementById("decision-focus-title");
@@ -870,6 +873,7 @@ export class UIController {
     this.bindButton(this.onboardingSkipButton, () => this.dismissOnboarding());
     this.bindButton(this.closeUnoColorButton, () => this.showUnoColorPicker(false));
     this.bindButton(this.closeSpellPouchButton, () => this.toggleSpellPouch(false));
+    this.bindButton(this.openSpellPouchButton, () => this.toggleSpellPouch(true));
     this.bindButton(this.resetRunButton, () => {
       this.showSettings(false);
       this.hideSpellDraft();
@@ -1308,6 +1312,16 @@ export class UIController {
       && !this.titleVisible,
     );
     this.spellPouchOverlay.classList.toggle("hidden", !canShow);
+    if (canShow && this.spellPouchLead) {
+      const state = this.game?.state;
+      if (this.pendingTargeting) {
+        this.spellPouchLead.textContent = "Your spell is already picked. Use the table highlights and finish the target step.";
+      } else if (state?.actionState?.canCast) {
+        this.spellPouchLead.textContent = "Choose one spell from the pouch by your right hand. You still only get one cast this turn.";
+      } else {
+        this.spellPouchLead.textContent = "The pouch is here for later. When your turn opens up, pick a spell and start trouble.";
+      }
+    }
   }
 
   showUnoColorPicker(visible, handIndex = null) {
@@ -2334,12 +2348,26 @@ export class UIController {
       .join("");
 
     if (this.spellPouchNote) {
-      if (this.pendingTargeting) {
-        this.spellPouchNote.textContent = "Pouch open. Pick the target the spell wants next.";
-      } else if (state.currentPlayerId === "human" && !state.roundEnded && state.actionState.canCast) {
-        this.spellPouchNote.textContent = "Open the pouch on the table to cast a spell.";
-      } else {
-        this.spellPouchNote.textContent = "The pouch waits on the table until your turn.";
+      const pouchReady = state.currentPlayerId === "human" && !state.roundEnded && state.actionState.canCast;
+      this.spellPouchNote.classList.toggle("ready", pouchReady && !this.pendingTargeting);
+      this.spellPouchNote.classList.toggle("waiting", !pouchReady && !this.pendingTargeting);
+      this.spellPouchNote.classList.toggle("targeting", Boolean(this.pendingTargeting));
+      if (this.openSpellPouchButton) {
+        this.openSpellPouchButton.disabled = !pouchReady && !this.pendingTargeting;
+        this.openSpellPouchButton.textContent = this.pendingTargeting ? "Finish spell" : "Open pouch";
+        this.openSpellPouchButton.classList.toggle("pulse-action", pouchReady && !this.pendingTargeting);
+      }
+      if (this.spellPouchNoteTitle && this.spellPouchNoteCopy) {
+        if (this.pendingTargeting) {
+          this.spellPouchNoteTitle.textContent = "Spell in motion";
+          this.spellPouchNoteCopy.textContent = "You already picked the spell. Use the table highlight to choose what it hits next.";
+        } else if (pouchReady) {
+          this.spellPouchNoteTitle.textContent = "Pouch ready";
+          this.spellPouchNoteCopy.textContent = "Your spells sit in the pouch by your right hand. Open it now to cast before you lock in the turn.";
+        } else {
+          this.spellPouchNoteTitle.textContent = "Pouch waiting";
+          this.spellPouchNoteCopy.textContent = "The pouch stays on the table, but it only opens when your turn and your mana line up.";
+        }
       }
     }
 
@@ -2546,9 +2574,21 @@ export class UIController {
     this.renderSummary(state);
     this.toggleSpellPouch(false);
     if (this.spellPouchNote) {
-      this.spellPouchNote.textContent = state.unoHasDrawnThisTurn
-        ? "Wizard Uno uses the cards in your hand. Play the new match or pass."
-        : (state.unoModifier?.description ?? "Wizard Uno uses your hand instead of a spell pouch.");
+      this.spellPouchNote.classList.remove("ready", "targeting");
+      this.spellPouchNote.classList.add("waiting");
+      if (this.spellPouchNoteTitle) {
+        this.spellPouchNoteTitle.textContent = "No pouch here";
+      }
+      if (this.spellPouchNoteCopy) {
+        this.spellPouchNoteCopy.textContent = state.unoHasDrawnThisTurn
+          ? "Wizard Uno uses the cards in your hand. Play the new match or pass."
+          : (state.unoModifier?.description ?? "Wizard Uno uses your hand instead of a spell pouch.");
+      }
+      if (this.openSpellPouchButton) {
+        this.openSpellPouchButton.disabled = true;
+        this.openSpellPouchButton.textContent = "Uno table";
+        this.openSpellPouchButton.classList.remove("pulse-action");
+      }
     }
     this.renderEffects(state);
     this.renderLog(state.logEntries);
@@ -2651,6 +2691,16 @@ export class UIController {
   }
 
   renderSpells(human, state) {
+    if (this.spellPouchLead) {
+      if (this.pendingTargeting) {
+        this.spellPouchLead.textContent = "Your spell is already picked. Use the table highlights and finish the target step.";
+      } else if (state.currentPlayerId === "human" && !state.roundEnded && state.actionState.canCast) {
+        this.spellPouchLead.textContent = "Choose one spell from the pouch by your right hand. You still only get one cast this turn.";
+      } else {
+        this.spellPouchLead.textContent = "The pouch is here for later. When your turn opens up, pick a spell and start trouble.";
+      }
+    }
+
     this.spellPouchList.innerHTML = human.spells
       .map((spell) => {
         const accent = SPELL_CATEGORY_COLORS[spell.category] ?? "#ffd84d";
