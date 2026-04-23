@@ -1957,17 +1957,27 @@ export class TableRenderer {
       community: { x: 50, y: 39 },
     };
     const anchor = positions[event.playerId] ?? { x: 50, y: 48 };
+    const anchorKey = event.playerId ?? "community";
+    const nearbyTexts = this.floatingTexts.filter((text) => text.anchorKey === anchorKey && text.frames > 10);
+    const lanePattern = [0, -1, 1, -2, 2];
+    const usedLanes = new Set(nearbyTexts.map((text) => text.lane));
+    const lane = lanePattern.find((candidate) => !usedLanes.has(candidate)) ?? lanePattern[nearbyTexts.length % lanePattern.length];
+    const laneOffsetX = lane * 4.6;
+    const laneOffsetY = Math.min(nearbyTexts.length, 4) * 3.2;
     const node = document.createElement("div");
     node.className = "floating-spell-text";
     node.textContent = event.text;
-    node.style.left = `${anchor.x}%`;
-    node.style.top = `${anchor.y}%`;
+    node.style.left = `${anchor.x + laneOffsetX}%`;
+    node.style.top = `${anchor.y - laneOffsetY}%`;
     node.style.setProperty("--spell-accent", event.color ?? SPELL_CATEGORY_COLORS[event.category] ?? "#ffffff");
     this.floatingLayer.append(node);
     this.floatingTexts.push({
       node,
-      x: anchor.x,
-      y: anchor.y,
+      anchorKey,
+      lane,
+      driftX: lane * 0.08,
+      x: anchor.x + laneOffsetX,
+      y: anchor.y - laneOffsetY,
       frames: 30,
     });
   }
@@ -2193,7 +2203,9 @@ export class TableRenderer {
 
     this.floatingTexts = this.floatingTexts.filter((text) => {
       text.frames -= 1;
+      text.x += text.driftX;
       text.y -= 0.55;
+      text.node.style.left = `${text.x}%`;
       text.node.style.top = `${text.y}%`;
       const textScale = this.presentationSettings.reducedFlash ? 0.03 : 0.08;
       text.node.style.transform = `translate(-50%, 0) scale(${1 + Math.min(textScale, text.frames / 180)})`;
