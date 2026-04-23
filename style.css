@@ -2,7 +2,7 @@
   color-scheme: dark;
   --app-gap: 12px;
   --app-pad: 10px;
-  --scene-max-width: 980px;
+  --scene-max-width: 1060px;
   --bg: #130e16;
   --panel: rgba(31, 23, 31, 0.94);
   --panel-border: #8d7450;
@@ -1274,7 +1274,7 @@ button,
 
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(340px, 32vw, 420px);
+  grid-template-columns: minmax(0, 1fr) clamp(330px, 30vw, 400px);
   gap: var(--app-gap);
   height: 100vh;
   height: 100dvh;
@@ -1616,7 +1616,7 @@ button,
   display: grid;
   place-items: center;
   width: min(100%, var(--scene-max-width));
-  max-width: calc((100dvh - 2 * var(--app-pad) - 78px) * 4 / 3);
+  max-width: calc((100dvh - 2 * var(--app-pad) - 72px) * 4 / 3);
   max-height: calc(100dvh - 2 * var(--app-pad) - 78px);
   margin: 0 auto;
   align-self: start;
