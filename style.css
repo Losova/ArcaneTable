@@ -2395,6 +2395,9 @@ button,
   overflow: auto;
   padding-right: 2px;
   align-content: start;
+  position: relative;
+  z-index: 2;
+  overscroll-behavior: contain;
 }
 
 .spells-panel {
@@ -2403,6 +2406,7 @@ button,
   min-height: 0;
   padding-bottom: 10px;
   overflow: hidden;
+  z-index: 2;
 }
 
 .spells-panel .combat-strip-head,
@@ -2434,6 +2438,8 @@ button,
     box-shadow 120ms ease,
     border-color 120ms ease,
     filter 120ms ease;
+  pointer-events: auto;
+  z-index: 2;
 }
 
 .spell-card.affordable {
@@ -3002,6 +3008,8 @@ button,
   flex: 0 0 auto;
   margin-top: 16px;
   padding-top: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .run-panel,
@@ -3027,6 +3035,8 @@ button,
   box-shadow:
     inset 0 0 0 1px rgba(255, 245, 217, 0.04),
     0 0 0 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .players-panel > .panel-collapse-head:hover {
