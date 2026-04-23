@@ -118,11 +118,6 @@ select {
   font: inherit;
 }
 
-.card-tile,
-.community-tile {
-  image-rendering: pixelated;
-}
-
 .boot-logo h1,
 .round-summary-kicker,
 .transition-banner__inner strong {
@@ -2368,13 +2363,14 @@ button,
 .card-tile,
 .community-tile {
   min-height: 68px;
-  padding: 6px;
+  padding: 8px 10px;
   background:
-    linear-gradient(180deg, #f4ead0, #dfc893);
-  color: #21150d;
-  border-color: #6c512f;
+    linear-gradient(180deg, #f7efd9 0%, #efe1b9 62%, #e2cea0 100%);
+  color: #1a120c;
+  border-color: #6a4d2a;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 248, 230, 0.28),
+    inset 0 0 0 1px rgba(255, 252, 242, 0.82),
+    inset 0 -10px 18px rgba(131, 93, 41, 0.08),
     0 1px 0 rgba(0, 0, 0, 0.24);
 }
 
@@ -2389,7 +2385,9 @@ button,
 .card-rank {
   font-size: clamp(1.12rem, 1.04rem + 0.34vw, 1.4rem);
   line-height: 1.3;
-  color: #120c08;
+  color: #130d09;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   text-shadow: none;
 }
 
@@ -2403,6 +2401,7 @@ button,
   font-size: clamp(0.74rem, 0.7rem + 0.14vw, 0.86rem);
   line-height: 1.5;
   color: inherit;
+  font-weight: 600;
   text-shadow: none;
 }
 
@@ -2412,7 +2411,22 @@ button,
 .community-tile:not(.back) .card-suit,
 .card-tile:not(.back) .card-wild,
 .community-tile:not(.back) .card-wild {
-  color: #1a110a;
+  color: #16100b;
+}
+
+.hand-cards .card-tile,
+.community-cards .card-tile {
+  background:
+    linear-gradient(180deg, #fbf4de 0%, #f0e2bb 58%, #e4d1a1 100%);
+}
+
+.hand-cards .card-tile .card-rank,
+.hand-cards .card-tile .card-suit,
+.hand-cards .card-tile .card-wild,
+.community-cards .card-tile .card-rank,
+.community-cards .card-tile .card-suit,
+.community-cards .card-tile .card-wild {
+  color: #120d09;
 }
 
 .spells-list {
