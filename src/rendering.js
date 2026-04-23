@@ -870,12 +870,18 @@ export class TableRenderer {
     };
     this.customizationStyle = { ...DEFAULT_CUSTOMIZATION };
     this.targetPreview = null;
+    this.onSpellPouchClick = null;
+    this.spellPouchInteractive = false;
+    this.hoveredPouch = false;
     this.latestState = null;
     this.showdownSequence = null;
     this.lastShowdownKey = null;
     this.currentThemeKey = null;
     this.wallMeshes = [];
     this.tableLegs = [];
+    this.spellPouchGroup = null;
+    this.spellPouchHitMesh = null;
+    this.spellPouchTag = null;
 
     this.tableGroup = new THREE.Group();
     this.roomGroup = new THREE.Group();
@@ -944,7 +950,20 @@ export class TableRenderer {
     this.canvas.addEventListener("mouseleave", () => {
       this.pointer.set(5, 5);
       this.hoveredCardKey = null;
+      this.hoveredPouch = false;
+      this.canvas.style.cursor = "";
     });
+
+    this.canvas.addEventListener("click", () => {
+      const interactive = this.pickInteractiveObject();
+      if (interactive?.type === "pouch" && this.spellPouchInteractive) {
+        this.onSpellPouchClick?.();
+      }
+    });
+  }
+
+  setSpellPouchHandler(handler = null) {
+    this.onSpellPouchClick = handler;
   }
 
   buildEnvironment() {
@@ -1044,6 +1063,55 @@ export class TableRenderer {
       this.tableLegs.push(leg);
       this.addJitterTarget(leg, 0.012);
     });
+
+    this.spellPouchGroup = new THREE.Group();
+    const pouchBody = new THREE.Mesh(
+      new THREE.SphereGeometry(0.34, 6, 5).toNonIndexed(),
+      flatMaterial(0x6d452f),
+    );
+    pouchBody.scale.set(1.05, 0.88, 0.9);
+    pouchBody.position.y = 0.18;
+    const pouchNeck = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.11, 0.14, 0.18, 6, 1, false).toNonIndexed(),
+      flatMaterial(0x8d5c3b),
+    );
+    pouchNeck.position.y = 0.44;
+    const pouchTie = new THREE.Mesh(
+      new THREE.TorusGeometry(0.12, 0.018, 4, 6).toNonIndexed(),
+      flatMaterial(0xd7c189),
+    );
+    pouchTie.rotation.x = Math.PI / 2;
+    pouchTie.position.y = 0.38;
+    const pouchTag = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: createPlaqueTexture({
+          title: "Spells",
+          subtitle: "Pouch",
+          accent: "#b79056",
+        }),
+        transparent: true,
+        toneMapped: false,
+      }),
+    );
+    pouchTag.position.set(0, 0.88, 0.08);
+    pouchTag.scale.set(1.12, 0.36, 1);
+    const hitMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.95, 1.15, 0.9).toNonIndexed(),
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+      }),
+    );
+    hitMesh.position.set(0, 0.46, 0);
+    this.spellPouchGroup.add(pouchBody, pouchNeck, pouchTie, pouchTag, hitMesh);
+    this.spellPouchGroup.position.set(3.18, 1.19, 3.02);
+    this.spellPouchGroup.rotation.y = -0.52;
+    this.tableGroup.add(this.spellPouchGroup);
+    this.spellPouchTag = pouchTag;
+    this.spellPouchHitMesh = hitMesh;
+    this.addJitterTarget(pouchBody, 0.008);
+    this.addJitterTarget(pouchNeck, 0.006);
 
     const chandelier = new THREE.Group();
     const ball = new THREE.Mesh(
@@ -1197,6 +1265,10 @@ export class TableRenderer {
     this.latestState = state;
     this.syncShowdownSequence(state);
     this.chaosMode = Boolean(state.chaosMode);
+    this.spellPouchInteractive = Boolean(state.started && state.gameType !== "uno");
+    if (this.spellPouchGroup) {
+      this.spellPouchGroup.visible = this.spellPouchInteractive;
+    }
     this.applyTableTheme(state.currentTable);
     clearGroup(this.chipsGroup);
     clearGroup(this.activeGroup);
@@ -1879,15 +1951,31 @@ export class TableRenderer {
     });
   }
 
-  updateHover() {
+  pickInteractiveObject() {
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    const meshes = [...this.cardActors.values()]
+    const pouchObjects = this.spellPouchInteractive && this.spellPouchHitMesh ? [this.spellPouchHitMesh] : [];
+    const cardObjects = [...this.cardActors.values()]
       .filter((actor) => actor.hoverable)
       .map((actor) => actor.mesh);
-    const intersect = this.raycaster.intersectObjects(meshes, false)[0];
-    this.hoveredCardKey = intersect
-      ? [...this.cardActors.entries()].find(([, actor]) => actor.mesh === intersect.object)?.[0] ?? null
-      : null;
+    const interactive = this.raycaster.intersectObjects([...cardObjects, ...pouchObjects], false)[0];
+    if (!interactive) {
+      return null;
+    }
+    if (interactive.object === this.spellPouchHitMesh) {
+      return { type: "pouch" };
+    }
+    const cardEntry = [...this.cardActors.entries()].find(([, actor]) => actor.mesh === interactive.object);
+    if (cardEntry) {
+      return { type: "card", key: cardEntry[0] };
+    }
+    return null;
+  }
+
+  updateHover() {
+    const interactive = this.pickInteractiveObject();
+    this.hoveredCardKey = interactive?.type === "card" ? interactive.key : null;
+    this.hoveredPouch = interactive?.type === "pouch";
+    this.canvas.style.cursor = interactive ? "pointer" : "";
   }
 
   animate() {
@@ -2040,6 +2128,17 @@ export class TableRenderer {
       const baseScale = child.userData.pulseBaseScale;
       child.scale.set(baseScale * wobble, baseScale * wobble, baseScale * wobble);
     });
+
+    if (this.spellPouchGroup?.visible) {
+      const pouchBaseY = 1.19;
+      const hoverLift = this.hoveredPouch ? 0.05 : 0;
+      this.spellPouchGroup.position.y = quantize(pouchBaseY + Math.sin(this.frame * 0.08) * 0.018 + hoverLift, 1 / 96);
+      this.spellPouchGroup.rotation.z = quantize(Math.sin(this.frame * 0.05) * 0.016, 1 / 192);
+      const tagScale = this.hoveredPouch ? 1.18 : 1.12;
+      if (this.spellPouchTag) {
+        this.spellPouchTag.scale.set(tagScale, tagScale * 0.32, 1);
+      }
+    }
 
     this.spriteEffects = this.spriteEffects.filter((effect) => {
       effect.sprite.position.y += 0.025;

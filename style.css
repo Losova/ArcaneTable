@@ -1008,6 +1008,17 @@ button,
   margin-top: 12px;
 }
 
+.spell-pouch-overlay-card {
+  width: min(94vw, 980px);
+}
+
+.spell-pouch-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
 #spell-draft-overlay .overlay-card {
   width: min(94vw, 920px);
   max-height: min(88dvh, 760px);
@@ -2409,6 +2420,18 @@ button,
   z-index: 2;
 }
 
+.spell-pouch-note {
+  padding: 12px 14px;
+  border: 1px solid rgba(214, 179, 117, 0.22);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 226, 0.08), rgba(255, 248, 226, 0.03));
+  color: #e7dbc0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  text-shadow: none;
+}
+
 .spells-panel .combat-strip-head,
 .players-panel .compact-panel-heading,
 .actions-panel .combat-strip-head {
@@ -2463,6 +2486,11 @@ button,
 .spell-card.spent {
   filter: saturate(0.45);
   opacity: 0.82;
+}
+
+.spell-card--overlay {
+  min-height: 150px;
+  padding: 10px 9px 10px 16px;
 }
 
 .spell-card:not(.spent) .spell-sigil {
@@ -2530,10 +2558,19 @@ button,
   text-shadow: none;
 }
 
+.spell-card--overlay .target-preview {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .spell-topline strong {
   font-size: clamp(0.82rem, 0.78rem + 0.1vw, 0.92rem);
   line-height: 1.2;
   overflow-wrap: anywhere;
+}
+
+.spell-card--overlay .spell-topline strong {
+  font-size: clamp(0.9rem, 0.86rem + 0.1vw, 1rem);
 }
 
 .spell-topline {
@@ -2546,6 +2583,10 @@ button,
 .spell-cost {
   font-size: clamp(0.64rem, 0.6rem + 0.08vw, 0.72rem);
   white-space: nowrap;
+}
+
+.spell-card--overlay .spell-cost {
+  font-size: 0.76rem;
 }
 
 .relic-pick-button {
@@ -2562,11 +2603,22 @@ button,
   display: none;
 }
 
+.spell-card--overlay .card-meta {
+  display: block;
+  color: #6f4c29;
+  font-size: 0.74rem;
+}
+
 .spell-page-mark {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   align-items: start;
   gap: 8px;
+}
+
+.spell-card--overlay .spell-page-mark {
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 9px;
 }
 
 .spell-sigil {
@@ -2585,6 +2637,12 @@ button,
   box-shadow:
     inset 0 0 0 1px rgba(255, 248, 228, 0.5),
     0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.spell-card--overlay .spell-sigil {
+  width: 26px;
+  height: 26px;
+  font-size: 0.78rem;
 }
 
 .spell-card .card-meta {
@@ -2687,6 +2745,10 @@ button,
   min-height: 38px;
   padding: 8px 10px;
   font-size: 0.8rem;
+}
+
+.spell-card--overlay button {
+  min-height: 40px;
 }
 
 .action-disabled-reason {
@@ -3233,6 +3295,7 @@ button,
   .action-readout,
   .actions-grid,
   .spells-list,
+  .spell-pouch-list,
   .spell-draft-book {
     grid-template-columns: 1fr;
   }

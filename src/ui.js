@@ -722,6 +722,10 @@ export class UIController {
     this.unoColorGrid = document.getElementById("uno-color-grid");
     this.closeUnoColorButton = document.getElementById("close-uno-color-button");
     this.pendingUnoColorChoice = null;
+    this.spellPouchOverlay = document.getElementById("spell-pouch-overlay");
+    this.spellPouchLead = document.getElementById("spell-pouch-lead");
+    this.spellPouchList = document.getElementById("spell-pouch-list");
+    this.closeSpellPouchButton = document.getElementById("close-spell-pouch-button");
 
     this.transitionBanner = document.getElementById("transition-banner");
     this.transitionTitle = document.getElementById("transition-title");
@@ -765,7 +769,7 @@ export class UIController {
     this.handScore = document.getElementById("hand-score");
     this.manaLabel = document.getElementById("mana-label");
     this.manaOrbs = document.getElementById("mana-orbs");
-    this.spellsList = document.getElementById("spells-list");
+    this.spellPouchNote = document.getElementById("spell-pouch-note");
     this.actionHint = document.getElementById("action-hint");
     this.decisionFocus = document.getElementById("decision-focus");
     this.decisionFocusTitle = document.getElementById("decision-focus-title");
@@ -865,6 +869,7 @@ export class UIController {
     this.bindButton(this.onboardingNextButton, () => this.advanceOnboarding());
     this.bindButton(this.onboardingSkipButton, () => this.dismissOnboarding());
     this.bindButton(this.closeUnoColorButton, () => this.showUnoColorPicker(false));
+    this.bindButton(this.closeSpellPouchButton, () => this.toggleSpellPouch(false));
     this.bindButton(this.resetRunButton, () => {
       this.showSettings(false);
       this.hideSpellDraft();
@@ -898,6 +903,12 @@ export class UIController {
 
     this.codexList.innerHTML = this.buildCodexMarkup();
     this.refreshTitleGameUI();
+    this.renderer?.setSpellPouchHandler?.(() => {
+      if (this.game?.state?.gameType !== "uno" && this.game?.state?.started && !this.titleVisible) {
+        this.markInteraction();
+        this.toggleSpellPouch(true);
+      }
+    });
   }
 
   getActiveGameId() {
@@ -950,6 +961,7 @@ export class UIController {
     this.showStats(false);
     this.showWardrobe(false);
     this.showUnoColorPicker(false);
+    this.toggleSpellPouch(false);
     this.hideSpellDraft();
     this.hideRoundSummary();
     this.hideRelicDraft();
@@ -1271,12 +1283,31 @@ export class UIController {
   }
 
   showCodex(visible) {
+    if (visible) {
+      this.toggleSpellPouch(false);
+    }
     this.codexOverlay.classList.toggle("hidden", !visible);
   }
 
   showSettings(visible) {
     this.syncSettingsControls();
+    if (visible) {
+      this.toggleSpellPouch(false);
+    }
     this.settingsOverlay.classList.toggle("hidden", !visible);
+  }
+
+  toggleSpellPouch(visible) {
+    if (!this.spellPouchOverlay) {
+      return;
+    }
+    const canShow = Boolean(
+      visible
+      && this.game?.state?.started
+      && this.game?.state?.gameType !== "uno"
+      && !this.titleVisible,
+    );
+    this.spellPouchOverlay.classList.toggle("hidden", !canShow);
   }
 
   showUnoColorPicker(visible, handIndex = null) {
@@ -1359,6 +1390,7 @@ export class UIController {
   startNextRound() {
     this.hideRoundSummary();
     this.showUnoColorPicker(false);
+    this.toggleSpellPouch(false);
     if ((this.game.state.runCleared || this.game.state.runFailed) && this.game.state.roundEnded && !this.game.state.pendingRelicDraft?.choices?.length) {
       this.game.startGame({ resetMatch: true });
       return;
@@ -1385,6 +1417,7 @@ export class UIController {
       this.showCodex(false);
       this.showStats(false);
       this.showWardrobe(false);
+      this.toggleSpellPouch(false);
       this.hideSpellDraft();
       this.hideRoundSummary();
       this.hideRelicDraft();
@@ -1403,6 +1436,9 @@ export class UIController {
   }
 
   showTutorial(visible) {
+    if (visible) {
+      this.toggleSpellPouch(false);
+    }
     if (visible && this.tutorialSteps) {
       const gameId = this.getActiveGameId();
       const lines = TUTORIAL_CONTENT[gameId] ?? TUTORIAL_CONTENT.poker;
@@ -1412,10 +1448,16 @@ export class UIController {
   }
 
   showStats(visible) {
+    if (visible) {
+      this.toggleSpellPouch(false);
+    }
     this.statsOverlay.classList.toggle("hidden", !visible);
   }
 
   showWardrobe(visible) {
+    if (visible) {
+      this.toggleSpellPouch(false);
+    }
     this.renderWardrobe(this.profileStats);
     this.wardrobeOverlay.classList.toggle("hidden", !visible);
   }
@@ -2291,6 +2333,16 @@ export class UIController {
       }))
       .join("");
 
+    if (this.spellPouchNote) {
+      if (this.pendingTargeting) {
+        this.spellPouchNote.textContent = "Pouch open. Pick the target the spell wants next.";
+      } else if (state.currentPlayerId === "human" && !state.roundEnded && state.actionState.canCast) {
+        this.spellPouchNote.textContent = "Open the pouch on the table to cast a spell.";
+      } else {
+        this.spellPouchNote.textContent = "The pouch waits on the table until your turn.";
+      }
+    }
+
     this.renderSummary(state);
     this.renderSpells(human, state);
     this.renderEffects(state);
@@ -2346,6 +2398,9 @@ export class UIController {
       this.showSpellDraft(state.pendingSpellDraft);
     } else {
       this.hideSpellDraft();
+    }
+    if (state.roundEnded) {
+      this.toggleSpellPouch(false);
     }
     this.refreshOnboarding(state);
   }
@@ -2489,20 +2544,12 @@ export class UIController {
       .join("");
 
     this.renderSummary(state);
-    this.spellsList.innerHTML = `
-      <article class="spell-card spent">
-        <div class="spell-page-mark">
-          <span class="spell-sigil">UNO</span>
-          <div class="spell-topline">
-            <strong>${state.unoModifier?.name ?? "Action cards only"}</strong>
-            <span class="spell-cost">${state.unoCurrentColor}</span>
-          </div>
-        </div>
-        <div class="target-preview">${state.unoHasDrawnThisTurn
-          ? "You already drew this turn. Play the new match or pass."
-          : (state.unoModifier?.description ?? "Wizard Uno uses your hand instead of a spellbook. Wild cards let you choose the color.")}</div>
-      </article>
-    `;
+    this.toggleSpellPouch(false);
+    if (this.spellPouchNote) {
+      this.spellPouchNote.textContent = state.unoHasDrawnThisTurn
+        ? "Wizard Uno uses the cards in your hand. Play the new match or pass."
+        : (state.unoModifier?.description ?? "Wizard Uno uses your hand instead of a spell pouch.");
+    }
     this.renderEffects(state);
     this.renderLog(state.logEntries);
 
@@ -2604,7 +2651,7 @@ export class UIController {
   }
 
   renderSpells(human, state) {
-    this.spellsList.innerHTML = human.spells
+    this.spellPouchList.innerHTML = human.spells
       .map((spell) => {
         const accent = SPELL_CATEGORY_COLORS[spell.category] ?? "#ffd84d";
         const disabled =
@@ -2626,17 +2673,17 @@ export class UIController {
               : "Cast";
 
         return `
-          <article class="spell-card spell-${slugify(spell.category)} ${targetingThis ? "selected-target" : ""} ${spell.used ? "spent" : ""} ${!disabled ? "affordable" : ""}" style="--spell-accent:${accent}" data-spell-card-id="${spell.id}" ${disabled ? 'aria-disabled="true"' : ""}>
+          <article class="spell-card spell-card--overlay spell-${slugify(spell.category)} ${targetingThis ? "selected-target" : ""} ${spell.used ? "spent" : ""} ${!disabled ? "affordable" : ""}" style="--spell-accent:${accent}" data-spell-card-id="${spell.id}" ${disabled ? 'aria-disabled="true"' : ""}>
             <div class="spell-page-mark">
               <span class="spell-sigil">${spellSigil(spell.category)}</span>
               <div class="spell-topline">
-                <strong>${compactSpellName(spell.name)}</strong>
+                <strong>${spell.name}</strong>
                 <span class="spell-cost">${spell.currentCost} MP</span>
               </div>
             </div>
             ${targetPreview ? `<div class="target-preview">${targetPreview}</div>` : ""}
             <div class="spell-bottomline">
-              <span class="card-meta">${spell.category}</span>
+              <span class="card-meta">${toTitleCase(spell.category)}</span>
               <button data-spell-id="${spell.id}" ${disabled ? "disabled" : ""}>
                 ${castLabel}
               </button>
@@ -2659,14 +2706,14 @@ export class UIController {
       })
       .join("");
 
-    for (const button of this.spellsList.querySelectorAll("button[data-spell-id]")) {
+    for (const button of this.spellPouchList.querySelectorAll("button[data-spell-id]")) {
       button.addEventListener("click", () => {
         this.markInteraction();
         this.handleSpellButton(button.dataset.spellId, human);
       });
     }
 
-    for (const card of this.spellsList.querySelectorAll("article[data-spell-card-id]")) {
+    for (const card of this.spellPouchList.querySelectorAll("article[data-spell-card-id]")) {
       card.addEventListener("click", (event) => {
         if (event.target.closest("button")) {
           return;
@@ -2776,7 +2823,10 @@ export class UIController {
     }
 
     if (!spell.targetMode && !spell.targetSteps?.length) {
-      this.game.humanCastSpell(spellId);
+      const didCast = this.game.humanCastSpell(spellId);
+      if (didCast) {
+        this.toggleSpellPouch(false);
+      }
       return;
     }
 
@@ -2785,6 +2835,7 @@ export class UIController {
       selection: {},
       stepIndex: 0,
     };
+    this.toggleSpellPouch(true);
     this.game.notify();
   }
 
@@ -2860,6 +2911,7 @@ export class UIController {
     const didCast = this.game.humanCastSpell(spellId, this.pendingTargeting.selection);
     if (didCast) {
       this.pendingTargeting = null;
+      this.toggleSpellPouch(false);
     }
   }
 
