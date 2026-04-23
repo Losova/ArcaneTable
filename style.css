@@ -2370,9 +2370,12 @@ button,
   min-height: 68px;
   padding: 6px;
   background:
-    linear-gradient(180deg, #efe0ba, #d4b984);
-  color: #28170f;
-  border-color: #7b5f39;
+    linear-gradient(180deg, #f4ead0, #dfc893);
+  color: #21150d;
+  border-color: #6c512f;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 248, 230, 0.28),
+    0 1px 0 rgba(0, 0, 0, 0.24);
 }
 
 .card-tile.back,
@@ -2386,7 +2389,7 @@ button,
 .card-rank {
   font-size: clamp(1.12rem, 1.04rem + 0.34vw, 1.4rem);
   line-height: 1.3;
-  color: #17110d;
+  color: #120c08;
   text-shadow: none;
 }
 
@@ -2401,6 +2404,15 @@ button,
   line-height: 1.5;
   color: inherit;
   text-shadow: none;
+}
+
+.card-tile:not(.back) .card-rank,
+.community-tile:not(.back) .card-rank,
+.card-tile:not(.back) .card-suit,
+.community-tile:not(.back) .card-suit,
+.card-tile:not(.back) .card-wild,
+.community-tile:not(.back) .card-wild {
+  color: #1a110a;
 }
 
 .spells-list {
