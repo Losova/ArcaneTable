@@ -1,8 +1,8 @@
 export const APP_META = Object.freeze({
   collectionName: "Arcane Table",
   displayName: "Arcane Table",
-  version: "1.0.0-dev",
-  channel: "V1 foundation",
+  version: "1.0.0",
+  channel: "V1 release",
   storageSchemaVersion: 2,
 });
 

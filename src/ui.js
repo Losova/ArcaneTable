@@ -908,7 +908,7 @@ export class UIController {
         chaosMode: this.chaosToggle.checked,
         doubleOrNothing: this.doubleToggle.checked,
         loadoutId: this.loadoutSelect?.value || "plain-deck",
-        debugMode: this.debugToggle.checked,
+        debugMode: Boolean(this.debugToggle?.checked),
         dailyMode: false,
       });
     });
@@ -920,7 +920,7 @@ export class UIController {
         chaosMode: this.chaosToggle.checked,
         doubleOrNothing: this.doubleToggle.checked,
         loadoutId: this.loadoutSelect?.value || "plain-deck",
-        debugMode: this.debugToggle.checked,
+        debugMode: Boolean(this.debugToggle?.checked),
         dailyMode: true,
       });
     });
@@ -1126,7 +1126,9 @@ export class UIController {
     if (this.loadoutSelect) {
       this.loadoutSelect.value = loadoutId ?? "plain-deck";
     }
-    this.debugToggle.checked = Boolean(debugMode);
+    if (this.debugToggle) {
+      this.debugToggle.checked = Boolean(debugMode);
+    }
     this.dailyButton.classList.toggle("selected-target", Boolean(dailyMode));
   }
 
@@ -2373,7 +2375,9 @@ export class UIController {
       if (this.loadoutSelect) {
         this.loadoutSelect.value = state.starterLoadout?.id ?? "plain-deck";
       }
-      this.debugToggle.checked = state.debugMode;
+      if (this.debugToggle) {
+        this.debugToggle.checked = state.debugMode;
+      }
       this.stableToggle.checked = this.presentationSettings.stableVisuals;
       this.flashToggle.checked = this.presentationSettings.reducedFlash;
       this.dailyButton.classList.toggle("selected-target", Boolean(state.dailyChallenge));
