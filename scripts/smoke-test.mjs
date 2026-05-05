@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { chooseAiAction, chooseAiSpell, chooseAiUnoAction } from "../src/ai.js";
+import { chooseAiAction, chooseAiSpell, chooseAiSpadesAction, chooseAiUnoAction } from "../src/ai.js";
 import { WizardPokerGame } from "../src/game.js";
 
 function createGame({ seed, gameType = "poker", chaosMode = false, doubleOrNothing = false } = {}) {
@@ -99,6 +99,36 @@ function aiUnoTurn(game) {
   return game.performUnoAction(player.id, action.type);
 }
 
+function humanSpadesTurn(game) {
+  const player = game.getCurrentPlayer();
+  assert(player && player.id === "human", "human spades turn expected");
+
+  if (game.state.spadesPhase === "bidding") {
+    const moonCount = player.hand.filter((card) => card.suit === "Moons").length;
+    const highCount = player.hand.filter((card) => ["A", "K"].includes(card.rank)).length;
+    const bid = Math.max(0, Math.min(3, Math.round((moonCount + highCount) / 1.4)));
+    return game.performSpadesAction(player.id, "bid", { bid });
+  }
+
+  const legal = game.getSpadesLegalCards(player)
+    .map((card) => ({ card, index: player.hand.findIndex((entry) => entry.id === card.id) }))
+    .filter((entry) => entry.index >= 0)
+    .sort((left, right) => left.card.rank.localeCompare(right.card.rank, undefined, { numeric: true }));
+  assert(legal.length, "human spades turn should have at least one legal card");
+  return game.performSpadesAction(player.id, "play", { handIndex: legal[0].index });
+}
+
+function aiSpadesTurn(game) {
+  const player = game.getCurrentPlayer();
+  assert(player && player.id !== "human", "AI spades turn expected");
+  const action = chooseAiSpadesAction(game, player);
+  assert(action, "AI spades action should exist");
+  if (action.type === "bid") {
+    return game.performSpadesAction(player.id, "bid", { bid: action.bid });
+  }
+  return game.performSpadesAction(player.id, "play", { handIndex: action.index });
+}
+
 function playOneTurn(game) {
   assert(!game.state.roundEnded, "round should still be active");
   const player = game.getCurrentPlayer();
@@ -106,6 +136,9 @@ function playOneTurn(game) {
 
   if (game.state.gameType === "uno") {
     return player.id === "human" ? humanUnoTurn(game) : aiUnoTurn(game);
+  }
+  if (game.state.gameType === "spades") {
+    return player.id === "human" ? humanSpadesTurn(game) : aiSpadesTurn(game);
   }
 
   return player.id === "human" ? humanPokerTurn(game) : aiPokerTurn(game);
@@ -205,6 +238,39 @@ function runUnoScenario({ seed, chaosMode = false, doubleOrNothing = false } = {
   };
 }
 
+function runSpadesScenario({ seed, chaosMode = false, doubleOrNothing = false } = {}) {
+  const game = createGame({ seed, gameType: "spades", chaosMode, doubleOrNothing });
+  game.startGame({ resetMatch: true });
+
+  assert.equal(game.state.pendingSpellDraft, null, "spades should not open with the poker spell draft");
+  assert.equal(game.state.round, 1, "spades should enter round one immediately");
+  assert.equal(game.state.roundEnded, false, "spades round one should start active");
+  assert.equal(game.state.spadesPhase, "bidding", "spades should start in bidding");
+
+  const firstRoundSteps = playUntilRoundEnd(game, { maxSteps: 120 });
+  assert(game.state.lastRoundSummary, "spades round should produce a summary");
+
+  game.startGame();
+  assert.equal(game.state.round, 2, "spades should enter round two");
+
+  for (let index = 0; index < 10 && !game.state.roundEnded; index += 1) {
+    const acted = playOneTurn(game);
+    assert.equal(acted, true, "mid-round spades actions should resolve before save");
+  }
+
+  const resumed = resumeIntoNewGame(game);
+  const resumedSteps = playUntilRoundEnd(resumed, { maxSteps: 120 });
+  assert(resumed.state.lastRoundSummary, "resumed spades round should still finish cleanly");
+
+  return {
+    seed,
+    firstRoundSteps,
+    resumedSteps,
+    result: resumed.state.lastRoundSummary?.humanResult ?? null,
+    trump: resumed.state.lastRoundSummary?.spadesTrumpSuit ?? null,
+  };
+}
+
 function main() {
   const pokerRuns = [
     runPokerScenario({ seed: "v1-poker-smoke" }),
@@ -214,6 +280,10 @@ function main() {
     runUnoScenario({ seed: "v1-uno-smoke" }),
     runUnoScenario({ seed: "v1-uno-chaos", chaosMode: true }),
   ];
+  const spadesRuns = [
+    runSpadesScenario({ seed: "v1-spades-smoke" }),
+    runSpadesScenario({ seed: "v1-spades-chaos", chaosMode: true }),
+  ];
 
   console.log("Smoke tests passed.");
   console.table({
@@ -221,6 +291,8 @@ function main() {
     poker_chaos: pokerRuns[1],
     uno_default: unoRuns[0],
     uno_chaos: unoRuns[1],
+    spades_default: spadesRuns[0],
+    spades_chaos: spadesRuns[1],
   });
 }
 

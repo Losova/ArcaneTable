@@ -47,13 +47,13 @@ const TITLE_TABLE_GAMES = {
     note: "Match color or value, drop action cards, and empty your hand before the room turns on you.",
     playable: true,
   },
-  war: {
-    id: "war",
-    name: "Wizard War",
-    kicker: "Simple cards. Terrible spell escalation.",
-    copy: "Flip cards, cheat ties, and turn the easiest game alive into a magical arms race.",
-    note: "This table exists in concept form only for now.",
-    playable: false,
+  spades: {
+    id: "spades",
+    name: "Wizard Spades",
+    kicker: "Three tricks. Trump moons. Loud bids.",
+    copy: "Bid your tricks, follow suit, and use trump at exactly the right rude moment.",
+    note: "This is a compact tavern Spades table: 3 cards, 3 tricks, and exact bids matter.",
+    playable: true,
   },
 };
 
@@ -71,6 +71,13 @@ const TUTORIAL_CONTENT = {
     "3. Skip, Reverse, +2, Wild, and +4 all work like dirty wizard table etiquette should.",
     "4. Empty your hand before the other wizards do. This mode is about speed, not a pot.",
     "5. If you play a Wild or +4, pick the color you want the whole table to obey next.",
+  ],
+  spades: [
+    "1. Wizard Spades is a short 3-card table. Everyone bids 0 to 3 tricks before the hand starts.",
+    "2. You must follow the lead suit if you can. If you cannot, you may throw anything.",
+    "3. Moons are trump at this table. They beat the lead suit once trump has hit the trick.",
+    "4. Exact bids score best. Missing your contract hurts much more than overmaking it.",
+    "5. Click a card in your hand, then play it when it is your turn.",
   ],
 };
 
@@ -107,6 +114,23 @@ const ONBOARDING_STEPS = {
       focus: "actions",
       title: "Draw once, then decide",
       copy: "In Wizard Uno you can draw once each turn, then either play the new match or pass.",
+    },
+  ],
+  spades: [
+    {
+      focus: "actions",
+      title: "Set your bid first",
+      copy: "Before any trick starts, set how many tricks you think you will take in this short hand.",
+    },
+    {
+      focus: "hand",
+      title: "Then choose your card",
+      copy: "Click a card in your hand to focus it. During play, you still have to follow suit if you can.",
+    },
+    {
+      focus: "table",
+      title: "Watch the trick",
+      copy: "The middle row shows the current trick. Moons are trump and can steal it once they appear.",
     },
   ],
 };
@@ -378,6 +402,39 @@ function unoDecisionFocus(state, { humanTurn, selectedCard }) {
   };
 }
 
+function spadesDecisionFocus(state, { humanTurn, selectedCard }) {
+  if (state.roundEnded) {
+    return {
+      title: "This hand is done",
+      copy: "Check the score line, then deal the next hand when you are ready.",
+    };
+  }
+  if (!humanTurn) {
+    return {
+      title: "Wait for the table",
+      copy: "The other wizards are still bidding or playing out the current trick.",
+    };
+  }
+  if (state.spadesPhase === "bidding") {
+    return {
+      title: "Set your contract",
+      copy: `Choose how many tricks you want: ${state.spadesBidCursor}. Exact bids score best in this short hand.`,
+    };
+  }
+  if (selectedCard) {
+    return {
+      title: "Play the selected card",
+      copy: `You picked ${cardLabel(selectedCard)}. Follow suit if you can, or break in with trump.`,
+    };
+  }
+  return {
+    title: "Play to the trick",
+    copy: state.spadesLeadSuit
+      ? `The trick is on ${state.spadesLeadSuit}. Follow suit if you can.`
+      : "Lead the trick. Moons are trump once they enter play.",
+  };
+}
+
 function pokerDisabledReason(state, { humanTurn, targetingStep }) {
   if (targetingStep) {
     return "The action buttons pause while you choose a spell target.";
@@ -417,6 +474,27 @@ function unoDisabledReason(state, { humanTurn, selectedCard, canPlaySelected }) 
   }
   if (!state.actionState.canRaise && !state.actionState.canFold) {
     return "You already finished the draw step for this turn.";
+  }
+  return "";
+}
+
+function spadesDisabledReason(state, { humanTurn, selectedCard, canPlaySelected }) {
+  if (state.roundEnded) {
+    return "This hand is over. Start the next one when you are ready.";
+  }
+  if (!humanTurn) {
+    return "These buttons wake up when it is your turn.";
+  }
+  if (state.spadesPhase === "bidding") {
+    return "";
+  }
+  if (!selectedCard) {
+    return "Pick a card in your hand before you play it.";
+  }
+  if (!canPlaySelected) {
+    return state.spadesLeadSuit
+      ? `You still have ${state.spadesLeadSuit}. You must follow suit first.`
+      : "That card is not legal from this lead.";
   }
   return "";
 }
@@ -750,6 +828,7 @@ export class UIController {
     this.selectedTitleGame = "poker";
     this.resumeSnapshot = null;
     this.selectedUnoCardIndex = null;
+    this.selectedSpadesCardIndex = null;
     this.titlePreviewRenderer = this.titleWizardPreview ? new WizardPreviewRenderer(this.titleWizardPreview, { creepy: false }) : null;
     this.wardrobePreviewRenderer = this.wardrobePreview ? new WizardPreviewRenderer(this.wardrobePreview, { creepy: true }) : null;
 
@@ -908,7 +987,7 @@ export class UIController {
     this.codexList.innerHTML = this.buildCodexMarkup();
     this.refreshTitleGameUI();
     this.renderer?.setSpellPouchHandler?.(() => {
-      if (this.game?.state?.gameType !== "uno" && this.game?.state?.started && !this.titleVisible) {
+      if (this.game?.state?.gameType === "poker" && this.game?.state?.started && !this.titleVisible) {
         this.markInteraction();
         this.toggleSpellPouch(true);
       }
@@ -917,7 +996,7 @@ export class UIController {
 
   getActiveGameId() {
     if (this.game?.state?.started) {
-      return this.game.state.gameType === "uno" ? "uno" : "poker";
+      return this.game.state.gameType;
     }
     return this.selectedTitleGame;
   }
@@ -925,6 +1004,10 @@ export class UIController {
   handlePrimaryAction() {
     if (this.game.state.gameType === "uno") {
       this.tryPlaySelectedUnoCard();
+      return;
+    }
+    if (this.game.state.gameType === "spades") {
+      this.tryPlaySelectedSpadesCard();
       return;
     }
     this.game.humanAction("check");
@@ -935,12 +1018,20 @@ export class UIController {
       this.game.humanAction("draw");
       return;
     }
+    if (this.game.state.gameType === "spades") {
+      this.handleSpadesSecondaryAction();
+      return;
+    }
     this.game.humanAction("raise");
   }
 
   handleTertiaryAction() {
     if (this.game.state.gameType === "uno") {
       this.game.humanAction("pass");
+      return;
+    }
+    if (this.game.state.gameType === "spades") {
+      this.handleSpadesTertiaryAction();
       return;
     }
     this.game.humanAction("fold");
@@ -1022,7 +1113,11 @@ export class UIController {
     }
 
     this.startButton.textContent = hasFinish ? "Run it back" : "Play";
-    const resumeGameType = this.resumeSnapshot?.state?.gameType === "uno" ? "Wizard Uno" : "Arcane Table";
+    const resumeGameType = this.resumeSnapshot?.state?.gameType === "uno"
+      ? "Wizard Uno"
+      : this.resumeSnapshot?.state?.gameType === "spades"
+        ? "Wizard Spades"
+        : "Arcane Table";
     this.continueButton.textContent = `Continue ${resumeGameType}`;
     this.titleKicker.textContent = hasFinish
       ? "Tavern cleared. WIZCORP remains concerned."
@@ -1145,7 +1240,7 @@ export class UIController {
   }
 
   refreshOnboarding(state = null) {
-    const gameId = state?.gameType === "uno" ? "uno" : this.getActiveGameId();
+    const gameId = state?.gameType ?? this.getActiveGameId();
     const steps = ONBOARDING_STEPS[gameId] ?? ONBOARDING_STEPS.poker;
     const visible = !this.onboardingDismissed && !this.titleVisible && Boolean(state?.started) && !state?.roundEnded;
     const step = steps[Math.min(this.onboardingStepIndex, steps.length - 1)] ?? null;
@@ -1382,6 +1477,58 @@ export class UIController {
     }
   }
 
+  tryPlaySelectedSpadesCard() {
+    if (this.game.state.gameType !== "spades") {
+      return;
+    }
+
+    if (this.game.state.spadesPhase === "bidding") {
+      this.game.humanConfirmSpadesBid();
+      return;
+    }
+
+    if (!Number.isInteger(this.selectedSpadesCardIndex)) {
+      return;
+    }
+
+    const human = this.game.getPlayer("human");
+    const card = human?.hand?.[this.selectedSpadesCardIndex];
+    if (!card || !this.game.canPlaySpadesCard("human", this.selectedSpadesCardIndex)) {
+      return;
+    }
+
+    const didPlay = this.game.humanPlaySpadesCard(this.selectedSpadesCardIndex);
+    if (didPlay) {
+      this.selectedSpadesCardIndex = null;
+    }
+  }
+
+  handleSpadesSecondaryAction() {
+    if (this.game.state.gameType !== "spades") {
+      return;
+    }
+    if (this.game.state.spadesPhase === "bidding") {
+      this.game.humanAdjustSpadesBid(1);
+      return;
+    }
+    if (this.game.humanPlayAutoSpadesCard("low")) {
+      this.selectedSpadesCardIndex = null;
+    }
+  }
+
+  handleSpadesTertiaryAction() {
+    if (this.game.state.gameType !== "spades") {
+      return;
+    }
+    if (this.game.state.spadesPhase === "bidding") {
+      this.game.humanAdjustSpadesBid(-1);
+      return;
+    }
+    if (this.game.humanPlayAutoSpadesCard("high")) {
+      this.selectedSpadesCardIndex = null;
+    }
+  }
+
   buildCodexMarkup() {
     const entries = [
       ["Wrong Pot", "The next chips from that wizard vanish into a fake pot and never count toward the real one."],
@@ -1394,6 +1541,7 @@ export class UIController {
       ["Double or Nothing", "Higher stakes and a louder table. If you lose a hand, the run dies on the spot."],
       ["Wild Color", "In Wizard Uno, Wild and +4 cards let you choose the live color for the whole table."],
       ["Draw Rule", "In Wizard Uno, you can draw once per turn. After that, either play the new card if it fits or pass."],
+      ["Wizard Spades", "A compact 3-card Spades table. Bid first, follow suit if you can, and remember that Moons are trump."],
     ];
 
     return entries
@@ -1941,6 +2089,7 @@ export class UIController {
     }
 
     const isUno = summary.gameType === "uno";
+    const isSpades = summary.gameType === "spades";
     const winners = summary.winners
       .map((winner) => `<span class="round-summary-chip">${winner.name} / ${winner.hand}</span>`)
       .join("");
@@ -1974,7 +2123,7 @@ export class UIController {
           </div>
           <div class="round-summary-line"><strong>Cleared</strong><span>All 3 tables</span></div>
           <div class="round-summary-line"><strong>Best streak</strong><span>${summary.bestStreak}</span></div>
-          <div class="round-summary-line"><strong>${isUno ? "Final table" : "Final pot"}</strong><span>${isUno ? (summary.tableName ?? "Wizard Uno") : `${summary.pot} real / ${summary.fakePot} fake`}</span></div>
+          <div class="round-summary-line"><strong>${isUno ? "Final table" : isSpades ? "Final score" : "Final pot"}</strong><span>${isUno ? (summary.tableName ?? "Wizard Uno") : isSpades ? `${summary.pot} points` : `${summary.pot} real / ${summary.fakePot} fake`}</span></div>
           <div class="round-summary-line"><strong>Winners</strong><span>${winners || "No winner recorded."}</span></div>
         </div>
       `;
@@ -2004,15 +2153,15 @@ export class UIController {
         <div class="round-summary-grid">
           <div class="summary-banner ${summary.humanResult === "won" ? "win" : summary.humanResult === "tied" ? "tie" : "loss"}">
             <strong>${summary.humanResult === "won"
-              ? (isUno ? `${getVictoryTitleFlavor(selectedTitleId, false)} / UNO` : getVictoryTitleFlavor(selectedTitleId, false))
+              ? (isUno ? `${getVictoryTitleFlavor(selectedTitleId, false)} / UNO` : isSpades ? `${getVictoryTitleFlavor(selectedTitleId, false)} / SPADES` : getVictoryTitleFlavor(selectedTitleId, false))
               : summary.title}</strong>
             <p>${summary.message}</p>
           </div>
           <div class="round-summary-line"><strong>Winners</strong><span>${winners || "No winner recorded."}</span></div>
           <div class="round-summary-line"><strong>Streak</strong><span>${summary.streak} current / ${summary.bestStreak} best</span></div>
-          <div class="round-summary-line"><strong>${isUno ? "Key rule" : "Table event"}</strong><span>${isUno ? (summary.unoModifier?.name ?? "Standard discard") : (summary.tableEvent?.name ?? "No special table rule")}</span></div>
+          <div class="round-summary-line"><strong>${isUno ? "Key rule" : isSpades ? "Trump suit" : "Table event"}</strong><span>${isUno ? (summary.unoModifier?.name ?? "Standard discard") : isSpades ? `${summary.spadesTrumpSuit ?? "Moons"} are trump` : (summary.tableEvent?.name ?? "No special table rule")}</span></div>
           <div class="round-summary-line"><strong>Next stop</strong><span>${summary.tableAdvance ? `${summary.tableAdvance.from} -> ${summary.tableAdvance.to}` : summary.tableName ?? "Backroom Tavern"}</span></div>
-          <div class="round-summary-line"><strong>Next reward</strong><span>${isUno ? "Start the next hand." : (summary.rewardReady ? "Pick a relic next." : "Deal the next hand.")}</span></div>
+          <div class="round-summary-line"><strong>Next reward</strong><span>${(isUno || isSpades) ? "Start the next hand." : (summary.rewardReady ? "Pick a relic next." : "Deal the next hand.")}</span></div>
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Next round";
@@ -2119,17 +2268,23 @@ export class UIController {
   }
 
   render(state) {
-    document.body.dataset.gameMode = state.gameType === "uno" ? "uno" : "poker";
+    document.body.dataset.gameMode = state.gameType;
     const human = state.players.find((player) => player.id === "human");
     const currentPlayer = state.players.find((player) => player.id === state.currentPlayerId);
     const fakePotSuffix = state.fakePot > 0 ? ` / FAKE ${state.fakePot}` : "";
+    this.communityCards?.classList.remove("community-cards-wide");
 
     if (state.gameType === "uno") {
       this.renderUno(state, human, currentPlayer);
       return;
     }
+    if (state.gameType === "spades") {
+      this.renderSpades(state, human, currentPlayer);
+      return;
+    }
 
     this.showUnoColorPicker(false);
+    this.selectedSpadesCardIndex = null;
     this.syncPendingTargeting(state, human);
 
     this.roundLabel.textContent = `${state.round}`;
@@ -2450,6 +2605,7 @@ export class UIController {
     }
 
     this.pendingTargeting = null;
+    this.selectedSpadesCardIndex = null;
     this.renderer?.setTargetPreview(null);
     if (!human || state.currentPlayerId !== "human" || state.roundEnded) {
       this.showUnoColorPicker(false);
@@ -2622,6 +2778,215 @@ export class UIController {
       selectedCard,
       canPlaySelected: Boolean(selectedCard && this.game.canPlayUnoCard(selectedCard)),
     });
+
+    if (state.roundEnded && state.lastRoundSummary?.round && this.roundSummarySeen !== state.lastRoundSummary.round) {
+      this.roundSummarySeen = state.lastRoundSummary.round;
+      this.showRoundSummary(state.lastRoundSummary);
+    }
+
+    if (!state.roundEnded) {
+      this.hideRoundSummary();
+      this.hideRelicDraft();
+    }
+    this.hideSpellDraft();
+    this.refreshOnboarding(state);
+  }
+
+  renderSpades(state, human, currentPlayer) {
+    document.body.dataset.gameMode = "spades";
+    if (!human) {
+      return;
+    }
+
+    this.pendingTargeting = null;
+    this.renderer?.setTargetPreview(null);
+    this.showUnoColorPicker(false);
+    this.toggleSpellPouch(false);
+
+    if (state.spadesPhase !== "playing") {
+      this.selectedSpadesCardIndex = null;
+    }
+
+    if (!Number.isInteger(this.selectedSpadesCardIndex) || this.selectedSpadesCardIndex < 0 || this.selectedSpadesCardIndex >= human.hand.length) {
+      this.selectedSpadesCardIndex = null;
+    }
+    if (this.selectedSpadesCardIndex !== null && !this.game.canPlaySpadesCard("human", this.selectedSpadesCardIndex)) {
+      this.selectedSpadesCardIndex = null;
+    }
+
+    const humanTurn = state.currentPlayerId === "human" && !state.roundEnded;
+    const selectedCard = Number.isInteger(this.selectedSpadesCardIndex) ? human.hand[this.selectedSpadesCardIndex] : null;
+    const canPlaySelected = Boolean(selectedCard && this.game.canPlaySpadesCard("human", this.selectedSpadesCardIndex));
+    const latestEntry = state.logEntries[0];
+    const decisionFocus = spadesDecisionFocus(state, { humanTurn, selectedCard });
+
+    this.roundLabel.textContent = `${state.round}`;
+    this.phaseLabel.textContent = "Wizard Spades";
+    this.potLabel.textContent = `T${state.spadesTrickNumber}`;
+    this.recordLabel.textContent = `${state.match.humanWins}-${state.match.humanLosses}-${state.match.humanTies}`;
+    this.streakLabel.textContent = `${state.match.winStreak} / ${state.match.bestStreak}`;
+    this.seedLabel.textContent = state.dailyChallenge ? `Daily ${state.dailyChallenge.dateLabel}` : state.seedLabel;
+    this.turnLabel.textContent = state.roundEnded ? "Round over" : state.currentPlayerId === "human" ? "Your turn" : compactTurnName(currentPlayer?.name);
+    this.handScore.textContent = `Bid ${human.spadesBid ?? 0} / Won ${human.spadesTricksWon ?? 0}`;
+    this.communityCaption.textContent = state.spadesPhase === "bidding"
+      ? `Moons are trump. Set a bid from 0 to 3.`
+      : state.spadesLeadSuit
+        ? `Lead suit: ${state.spadesLeadSuit}`
+        : `Lead the trick. ${state.spadesSpadesBroken ? "Moons are broken." : "Moons are still tucked away."}`;
+    this.summaryKicker.textContent = state.roundEnded ? "Round result" : "Current trick";
+    this.actionHint.textContent = state.actionState.hint;
+    this.decisionFocusTitle.textContent = decisionFocus.title;
+    this.decisionFocusCopy.textContent = decisionFocus.copy;
+    this.latestEventTitle.textContent = "Latest";
+    this.latestEventCopy.textContent = latestEntry?.message ?? "The Spades table is ready for the next bid.";
+    this.actionStateLabel.textContent = state.roundEnded
+      ? "Round over"
+      : state.spadesPhase === "bidding"
+        ? "Set bid"
+        : humanTurn
+          ? "Play trick"
+          : "Waiting";
+    this.targetStateLabel.textContent = state.spadesPhase === "bidding"
+      ? `Bid ${state.spadesBidCursor}`
+      : state.spadesLeadSuit ?? "Lead";
+    this.spellStateLabel.textContent = `Won ${human.spadesTricksWon}`;
+    this.newRoundButton.textContent = state.roundEnded ? "Next hand" : "Redeal";
+    this.summaryNextRoundButton.textContent = state.roundEnded ? ((state.runCleared || state.runFailed) ? "Start fresh run" : "Next round") : "Next round";
+    this.manaLabel.textContent = `${human.hand.length}`;
+    this.manaOrbs.innerHTML = manaOrbMarkup(Math.max(0, Math.min(6, human.hand.length)), 6);
+    this.debugPanel.classList.toggle("hidden", !state.debugMode);
+    this.debugCardsButton.textContent = state.debugRevealAll ? "HIDE CARDS" : "REVEAL CARDS";
+    this.runModeLabel.textContent = `${state.currentTable.index + 1}/${state.currentTable.total} ${state.currentTable.name}`;
+    this.dailyModList.innerHTML = [
+      `<span class="tag">${state.currentTable.name}</span>`,
+      `<span class="tag">Wizard Spades</span>`,
+      `<span class="tag">${state.spadesTrumpSuit} trump</span>`,
+      state.doubleOrNothing ? `<span class="tag">Double or Nothing</span>` : "",
+    ].join("");
+    this.relicList.innerHTML = [
+      `<span class="tag">Bid ${human.spadesBid ?? 0}</span>`,
+      `<span class="tag">Won ${human.spadesTricksWon}</span>`,
+      `<span class="tag">${state.spadesPhase === "bidding" ? "Bidding live" : `Trick ${state.spadesTrickNumber}`}</span>`,
+    ].join("");
+
+    this.phaseTrack.innerHTML = `
+      <div class="phase-step ${state.spadesPhase === "bidding" && !state.roundEnded ? "active" : ""} ${state.spadesPhase !== "bidding" || state.roundEnded ? "complete" : ""}">
+        <strong>Bid</strong>
+        <span>${state.spadesPhase === "bidding" && !state.roundEnded ? "Live" : "Done"}</span>
+      </div>
+      <div class="phase-step ${state.spadesPhase === "playing" && !state.roundEnded ? "active" : ""} ${state.roundEnded ? "complete" : ""}">
+        <strong>Play</strong>
+        <span>${state.roundEnded ? "Done" : state.spadesPhase === "playing" ? "Live" : "Next"}</span>
+      </div>
+    `;
+
+    this.playersList.innerHTML = state.players
+      .map((player) => {
+        const tags = [];
+        if (player.id === state.currentPlayerId && !state.roundEnded) {
+          tags.push(`<span class="tag good">${player.id === "human" ? "Your turn" : "Playing now"}</span>`);
+        }
+        if (player.roundResult === "won") {
+          tags.push(`<span class="tag good">Won</span>`);
+        }
+        if (player.roundResult === "tied") {
+          tags.push(`<span class="tag">Tied</span>`);
+        }
+        if (player.roundResult === "lost") {
+          tags.push(`<span class="tag bad">Lost</span>`);
+        }
+
+        const hiddenLineup = player.id !== "human" && player.hand.length
+          ? `<div class="player-hand-lineup">${player.hand.map((card) => miniCardMarkup(card)).join("")}</div>`
+          : "";
+
+        return `
+          <article class="player-card ${player.id === state.currentPlayerId ? "active" : ""}" data-player-id="${player.id}">
+            <div class="player-summary">
+              <div class="player-topline">
+                <span class="player-name">${player.name}</span>
+                <span class="player-role">Bid ${player.spadesBid ?? 0} · Won ${player.spadesTricksWon ?? 0}</span>
+              </div>
+            </div>
+            <div class="player-tags">${tags[0] ?? `<span class="tag">${player.spadesScore} pts</span>`}</div>
+            <details class="player-details">
+              <summary>More</summary>
+              <div class="player-details-body">
+                <div class="player-meters player-meters-compact">
+                  <span>${player.personality}</span>
+                  <span>${player.spadesScore} points</span>
+                </div>
+                ${tags.slice(1).length ? `<div class="player-tags">${tags.slice(1).join("")}</div>` : ""}
+                ${hiddenLineup}
+              </div>
+            </details>
+          </article>
+        `;
+      })
+      .join("");
+
+    this.handCards.innerHTML = human.hand
+      .map((card, index) => this.decorateCardTile(cardTileMarkup(card), {
+        attr: `data-spades-hand-index="${index}"`,
+        targetable: humanTurn && state.spadesPhase === "playing" && this.game.canPlaySpadesCard("human", index),
+        selected: this.selectedSpadesCardIndex === index,
+      }))
+      .join("");
+
+    this.communityCards.classList.add("community-cards-wide");
+    this.communityCards.innerHTML = state.communitySlots
+      .map((card, index) => this.decorateCardTile(cardTileMarkup(card), {
+        attr: `data-community-index="${index}"`,
+        targetable: false,
+        selected: false,
+      }))
+      .join("");
+
+    this.renderSummary(state);
+    if (this.spellPouchNote) {
+      this.spellPouchNote.classList.remove("ready", "targeting");
+      this.spellPouchNote.classList.add("waiting");
+      this.spellPouchNoteTitle.textContent = "No pouch here";
+      this.spellPouchNoteCopy.textContent = state.spadesPhase === "bidding"
+        ? "Wizard Spades starts with bids, not spells. Set your contract before the first trick."
+        : "This table is about suit-following and trump, not spellcasting.";
+      if (this.openSpellPouchButton) {
+        this.openSpellPouchButton.disabled = true;
+        this.openSpellPouchButton.textContent = "Spades table";
+        this.openSpellPouchButton.classList.remove("pulse-action");
+      }
+    }
+    this.renderEffects(state);
+    this.renderLog(state.logEntries);
+
+    for (const tile of this.handCards.querySelectorAll("[data-spades-hand-index]")) {
+      tile.addEventListener("click", () => {
+        const index = Number(tile.dataset.spadesHandIndex);
+        if (state.spadesPhase !== "playing") {
+          return;
+        }
+        if (this.selectedSpadesCardIndex === index) {
+          this.tryPlaySelectedSpadesCard();
+          return;
+        }
+        this.selectedSpadesCardIndex = index;
+        this.game.notify();
+      });
+    }
+
+    this.actionsPanel?.classList.toggle("active-turn", humanTurn);
+    this.actionsPanel?.classList.toggle("targeting-mode", false);
+    this.actionsPanel?.classList.toggle("blind-turn", false);
+    this.actionsPanel?.classList.toggle("spell-spent", true);
+    this.actionsPanel?.classList.toggle("call-pressure", false);
+
+    this.checkButton.textContent = state.spadesPhase === "bidding" ? `Lock bid ${state.spadesBidCursor}` : "Play card";
+    this.raiseButton.textContent = state.spadesPhase === "bidding" ? "Bid +1" : "Low card";
+    this.foldButton.textContent = state.spadesPhase === "bidding" ? "Bid -1" : "High card";
+    this.checkButton.disabled = !humanTurn || (state.spadesPhase === "playing" && !canPlaySelected);
+    this.raiseButton.disabled = !humanTurn || (state.spadesPhase === "bidding" ? state.spadesBidCursor >= 3 : !human.hand.length);
+    this.foldButton.disabled = !humanTurn || (state.spadesPhase === "bidding" ? state.spadesBidCursor <= 0 : !human.hand.length);
+    this.actionDisabledReason.textContent = spadesDisabledReason(state, { humanTurn, selectedCard, canPlaySelected });
 
     if (state.roundEnded && state.lastRoundSummary?.round && this.roundSummarySeen !== state.lastRoundSummary.round) {
       this.roundSummarySeen = state.lastRoundSummary.round;

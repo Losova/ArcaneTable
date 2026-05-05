@@ -17,7 +17,10 @@ const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 const GAME_TYPES = {
   poker: "poker",
   uno: "uno",
+  spades: "spades",
 };
+const SPADES_TRUMP_SUIT = "Moons";
+const SPADES_HAND_SIZE = 3;
 const UNO_COLORS = ["Crimson", "Gold", "Leaf", "Azure"];
 const UNO_COLOR_SYMBOLS = {
   Crimson: "R",
@@ -689,6 +692,13 @@ export class WizardPokerGame {
       unoHasDrawnThisTurn: false,
       unoModifier: null,
       unoModifierState: {},
+      spadesPhase: "bidding",
+      spadesLeadSuit: null,
+      spadesTrickCards: [],
+      spadesSpadesBroken: false,
+      spadesBidCursor: 1,
+      spadesTrickNumber: 1,
+      spadesRoundLeaderId: null,
       humanRelics: [],
       pendingRelicDraft: null,
       pendingSpellDraft: null,
@@ -740,6 +750,8 @@ export class WizardPokerGame {
       temporaryAceCardId: null,
       signatureRaiseReady: false,
       signatureSpellReady: false,
+      spadesBid: null,
+      spadesTricksWon: 0,
     };
   }
 
@@ -771,6 +783,8 @@ export class WizardPokerGame {
     player.temporaryAceCardId = null;
     player.signatureRaiseReady = false;
     player.signatureSpellReady = false;
+    player.spadesBid = null;
+    player.spadesTricksWon = 0;
   }
 
   random() {
@@ -790,7 +804,7 @@ export class WizardPokerGame {
   }
 
   setGameType(gameType = GAME_TYPES.poker) {
-    this.state.gameType = gameType === GAME_TYPES.uno ? GAME_TYPES.uno : GAME_TYPES.poker;
+    this.state.gameType = Object.values(GAME_TYPES).includes(gameType) ? gameType : GAME_TYPES.poker;
     this.notify();
   }
 
@@ -911,6 +925,13 @@ export class WizardPokerGame {
     this.state.unoHasDrawnThisTurn = false;
     this.state.unoModifier = null;
     this.state.unoModifierState = {};
+    this.state.spadesPhase = "bidding";
+    this.state.spadesLeadSuit = null;
+    this.state.spadesTrickCards = [];
+    this.state.spadesSpadesBroken = false;
+    this.state.spadesBidCursor = 1;
+    this.state.spadesTrickNumber = 1;
+    this.state.spadesRoundLeaderId = null;
     this.state.humanRelics = [];
     this.state.pendingRelicDraft = null;
     this.state.pendingSpellDraft = null;
@@ -1254,7 +1275,7 @@ export class WizardPokerGame {
     if (resetMatch) {
       this.resetMatchState();
       this.applyStarterLoadout();
-      if (this.state.gameType === GAME_TYPES.uno) {
+      if (this.state.gameType !== GAME_TYPES.poker) {
         this.startRound();
         return;
       }
@@ -1271,6 +1292,10 @@ export class WizardPokerGame {
   startRound() {
     if (this.state.gameType === GAME_TYPES.uno) {
       this.startUnoRound();
+      return;
+    }
+    if (this.state.gameType === GAME_TYPES.spades) {
+      this.startSpadesRound();
       return;
     }
 
@@ -1430,6 +1455,380 @@ export class WizardPokerGame {
       this.log(state.unoModifier.name, state.unoModifier.description, state.unoModifier.category);
     }
     this.emitAmbientBanter("round");
+    this.notify();
+  }
+
+  startSpadesRound() {
+    const state = this.state;
+    const currentTable = this.getCurrentTable();
+    state.pendingRelicDraft = null;
+    state.pendingSpellDraft = null;
+    this.logEntries = [];
+    state.round += 1;
+    state.phaseIndex = 0;
+    state.currentBet = 0;
+    state.raiseAmount = 0;
+    state.pot = 0;
+    state.fakePot = 0;
+    state.communityCards = [];
+    state.pendingPlayers = [];
+    state.roundEnded = false;
+    state.runFailed = false;
+    state.revealedAll = false;
+    state.winnerText = "";
+    state.reverseRanking = false;
+    state.wizardTax = null;
+    state.spellSurcharge = null;
+    state.turnOrderOverride = null;
+    state.spellHistory = [];
+    state.spellFxEvents = [];
+    state.lastRoundSummary = null;
+    state.tableEvent = null;
+    state.tableIntro = state.tableIntroPending
+      ? {
+          title: `${currentTable.name} / Wizard Spades`,
+          subtitle: "Bid your tricks, follow suit, and remember that Moons are trump at this table.",
+        }
+      : null;
+    state.tableIntroPending = false;
+    state.dealerIndex = (state.round - 1) % state.players.length;
+    state.deck = shuffle(createDeck(), this.rng);
+    state.spadesPhase = "bidding";
+    state.spadesLeadSuit = null;
+    state.spadesTrickCards = [];
+    state.spadesSpadesBroken = false;
+    state.spadesTrickNumber = 1;
+
+    for (const player of state.players) {
+      player.hand = [];
+      player.spells = [];
+      player.mana = 0;
+      this.resetPlayerForRound(player);
+      for (let draw = 0; draw < SPADES_HAND_SIZE; draw += 1) {
+        player.hand.push(this.drawFromDeck());
+      }
+    }
+
+    state.spadesRoundLeaderId = this.turnOrder()[0]?.id ?? "human";
+    state.pendingPlayers = this.turnOrder().map((player) => player.id);
+    state.currentPlayerId = state.pendingPlayers[0] ?? null;
+    state.spadesBidCursor = 1;
+
+    this.log("Round Start", `Wizard Spades begins at ${currentTable.name}. Everyone gets ${SPADES_HAND_SIZE} cards, Moons are trump, and exact bids matter.`, "economy");
+    this.emitAmbientBanter("round");
+    this.notify();
+  }
+
+  getNextSpadesPlayerId(fromPlayerId, steps = 1) {
+    const order = this.turnOrder().map((player) => player.id);
+    const startIndex = order.indexOf(fromPlayerId);
+    if (startIndex === -1) {
+      return order[0] ?? null;
+    }
+    return order[(startIndex + steps) % order.length];
+  }
+
+  getSpadesLegalCards(player) {
+    const hand = player?.hand ?? [];
+    if (!hand.length) {
+      return [];
+    }
+
+    if (this.state.spadesLeadSuit) {
+      const matching = hand.filter((card) => card.suit === this.state.spadesLeadSuit);
+      return matching.length ? matching : hand;
+    }
+
+    if (!this.state.spadesSpadesBroken) {
+      const nonTrump = hand.filter((card) => card.suit !== SPADES_TRUMP_SUIT);
+      return nonTrump.length ? nonTrump : hand;
+    }
+
+    return hand;
+  }
+
+  canPlaySpadesCard(playerId, handIndex) {
+    const player = this.getPlayer(playerId);
+    const card = player?.hand?.[handIndex];
+    if (!player || !card) {
+      return false;
+    }
+    return this.getSpadesLegalCards(player).some((legalCard) => legalCard.id === card.id);
+  }
+
+  getSpadesScore(player) {
+    const bid = player?.spadesBid ?? 0;
+    const tricks = player?.spadesTricksWon ?? 0;
+    if (tricks >= bid) {
+      return bid * 10 + (tricks - bid);
+    }
+    return -(bid * 10);
+  }
+
+  setSpadesBidCursor(value) {
+    const capped = Math.max(0, Math.min(SPADES_HAND_SIZE, Math.round(value)));
+    this.state.spadesBidCursor = capped;
+    this.notify();
+    return capped;
+  }
+
+  humanAdjustSpadesBid(delta) {
+    if (this.state.gameType !== GAME_TYPES.spades || this.state.spadesPhase !== "bidding" || this.state.currentPlayerId !== "human") {
+      return false;
+    }
+    this.setSpadesBidCursor((this.state.spadesBidCursor ?? 1) + delta);
+    return true;
+  }
+
+  humanConfirmSpadesBid() {
+    if (this.state.gameType !== GAME_TYPES.spades || this.state.spadesPhase !== "bidding") {
+      return false;
+    }
+    return this.performSpadesAction("human", "bid", { bid: this.state.spadesBidCursor ?? 1 });
+  }
+
+  humanPlaySpadesCard(handIndex) {
+    if (this.state.gameType !== GAME_TYPES.spades || this.state.spadesPhase !== "playing") {
+      return false;
+    }
+    return this.performSpadesAction("human", "play", { handIndex });
+  }
+
+  humanPlayAutoSpadesCard(strategy = "low") {
+    if (this.state.gameType !== GAME_TYPES.spades || this.state.spadesPhase !== "playing" || this.state.currentPlayerId !== "human") {
+      return false;
+    }
+    const human = this.getPlayer("human");
+    const legal = this.getSpadesLegalCards(human);
+    if (!legal.length) {
+      return false;
+    }
+    const ordered = [...legal].sort((left, right) => effectiveRankValue(left) - effectiveRankValue(right));
+    const chosen = strategy === "high" ? ordered[ordered.length - 1] : ordered[0];
+    const handIndex = human.hand.findIndex((card) => card.id === chosen.id);
+    return this.performSpadesAction("human", "play", { handIndex });
+  }
+
+  beginSpadesPlayPhase() {
+    this.state.spadesPhase = "playing";
+    this.state.spadesLeadSuit = null;
+    this.state.spadesTrickCards = [];
+    this.state.currentPlayerId = this.state.spadesRoundLeaderId ?? this.turnOrder()[0]?.id ?? "human";
+    this.log("Bids Locked", "Bids are set. Play to the trick, follow suit, and remember Moons beat everything.", "economy");
+    this.notify();
+  }
+
+  performSpadesAction(playerId, type, payload = {}) {
+    const player = this.getPlayer(playerId);
+    if (!player || this.state.roundEnded || this.state.currentPlayerId !== playerId) {
+      return false;
+    }
+
+    if (this.state.spadesPhase === "bidding") {
+      if (type !== "bid") {
+        return false;
+      }
+      const bid = Math.max(0, Math.min(SPADES_HAND_SIZE, Math.round(payload.bid ?? 0)));
+      player.spadesBid = bid;
+      this.log("Bid", `${player.name} calls ${bid} trick${bid === 1 ? "" : "s"}.`, "economy");
+      this.emitSpellFx({
+        category: "economy",
+        text: `Bid ${bid}`,
+        playerId: player.id,
+        power: 1,
+        impact: false,
+      });
+      this.state.pendingPlayers = this.state.pendingPlayers.filter((id) => id !== player.id);
+      const nextId = this.state.pendingPlayers[0] ?? null;
+      if (nextId) {
+        this.state.currentPlayerId = nextId;
+        if (nextId === "human") {
+          this.state.spadesBidCursor = this.getPlayer("human")?.spadesBid ?? 1;
+        }
+        this.notify();
+        return true;
+      }
+      this.beginSpadesPlayPhase();
+      return true;
+    }
+
+    if (this.state.spadesPhase !== "playing" || type !== "play") {
+      return false;
+    }
+
+    const handIndex = payload.handIndex;
+    const card = player.hand[handIndex];
+    if (!card || !this.canPlaySpadesCard(playerId, handIndex)) {
+      return false;
+    }
+
+    player.hand.splice(handIndex, 1);
+    if (!this.state.spadesLeadSuit) {
+      this.state.spadesLeadSuit = card.suit;
+    }
+    if (card.suit === SPADES_TRUMP_SUIT) {
+      this.state.spadesSpadesBroken = true;
+    }
+    this.state.spadesTrickCards.push({
+      playerId: player.id,
+      playerName: player.name,
+      card: this.cloneCardForState(card),
+    });
+    this.log("Play", `${player.name} throws ${cardLabel(card)} into trick ${this.state.spadesTrickNumber}.`, "economy");
+    this.emitSpellFx({
+      category: card.suit === SPADES_TRUMP_SUIT ? "chaos" : "economy",
+      text: cardLabel(card),
+      playerId: player.id,
+      power: 1,
+      impact: false,
+    });
+
+    if (this.state.spadesTrickCards.length >= this.state.players.length) {
+      this.resolveSpadesTrick();
+      return true;
+    }
+
+    this.state.currentPlayerId = this.getNextSpadesPlayerId(player.id, 1);
+    this.notify();
+    return true;
+  }
+
+  resolveSpadesTrick() {
+    const leadSuit = this.state.spadesLeadSuit;
+    const entries = [...this.state.spadesTrickCards];
+    const trumpEntries = entries.filter((entry) => entry.card.suit === SPADES_TRUMP_SUIT);
+    const pool = trumpEntries.length ? trumpEntries : entries.filter((entry) => entry.card.suit === leadSuit);
+    const winner = pool.sort((left, right) => effectiveRankValue(right.card) - effectiveRankValue(left.card))[0];
+    const winnerPlayer = this.getPlayer(winner.playerId);
+
+    if (winnerPlayer) {
+      winnerPlayer.spadesTricksWon += 1;
+    }
+
+    this.log("Trick Won", `${winner.playerName} takes trick ${this.state.spadesTrickNumber} with ${cardLabel(winner.card)}.`, trumpEntries.length ? "chaos" : "economy");
+    this.emitSpellFx({
+      category: trumpEntries.length ? "chaos" : "economy",
+      text: `${winner.playerName} trick`,
+      playerId: winner.playerId,
+      power: 2,
+      impact: true,
+    });
+
+    if (this.state.players.every((player) => player.hand.length === 0)) {
+      this.finalizeSpadesRound();
+      return;
+    }
+
+    this.state.spadesTrickNumber += 1;
+    this.state.spadesLeadSuit = null;
+    this.state.spadesTrickCards = [];
+    this.state.spadesRoundLeaderId = winner.playerId;
+    this.state.currentPlayerId = winner.playerId;
+    this.notify();
+  }
+
+  finalizeSpadesRound() {
+    const playerScores = this.state.players.map((player) => ({
+      player,
+      score: this.getSpadesScore(player),
+    }));
+    const bestScore = Math.max(...playerScores.map((entry) => entry.score));
+    const winners = playerScores.filter((entry) => entry.score === bestScore).map((entry) => entry.player);
+    const winnerNames = winners.map((player) => player.name).join(" & ");
+    const summaryBits = this.state.players.map((player) => `${player.name} bid ${player.spadesBid ?? 0}, won ${player.spadesTricksWon}`).join(" · ");
+
+    this.state.roundEnded = true;
+    this.state.revealedAll = true;
+    this.state.currentPlayerId = null;
+    this.state.winnerText = `${winnerNames} win${winners.length > 1 ? "" : "s"} Wizard Spades at ${bestScore} points. ${summaryBits}.`;
+
+    for (const player of this.state.players) {
+      const isWinner = winners.some((winner) => winner.id === player.id);
+      if (isWinner && winners.length > 1) {
+        player.roundTies += 1;
+        player.roundResult = "tied";
+      } else if (isWinner) {
+        player.roundWins += 1;
+        player.roundResult = "won";
+      } else {
+        player.roundLosses += 1;
+        player.roundResult = "lost";
+      }
+      player.evaluation = {
+        label: `Bid ${player.spadesBid ?? 0} / Won ${player.spadesTricksWon}`,
+        cards: [],
+      };
+    }
+
+    const humanWonSolo = winners.length === 1 && winners[0]?.id === "human";
+    if (humanWonSolo) {
+      this.state.humanWinStreak += 1;
+      this.state.bestHumanWinStreak = Math.max(this.state.bestHumanWinStreak, this.state.humanWinStreak);
+    } else {
+      this.state.humanWinStreak = 0;
+    }
+
+    const finishedTable = this.getCurrentTable();
+    let tableAdvance = null;
+    if (this.state.doubleOrNothing && !humanWonSolo) {
+      this.state.runFailed = true;
+      tableAdvance = { from: finishedTable.name, to: "Run busted", clearedRun: false, bustedRun: true };
+      this.log("Double or Nothing", `The Spades run ends immediately at ${finishedTable.name}. The room enjoyed the collapse.`, "disruption");
+    } else if (humanWonSolo && this.state.runTableIndex < TABLE_LADDER.length - 1) {
+      const from = finishedTable;
+      this.state.runTableIndex += 1;
+      const to = this.getCurrentTable();
+      tableAdvance = { from: from.name, to: to.name, clearedRun: false };
+      this.state.tableIntroPending = true;
+      this.log("New Table", `${from.name} is cleared. Wizard Spades moves to ${to.name}.`, to.category);
+    } else if (humanWonSolo && this.state.runTableIndex === TABLE_LADDER.length - 1) {
+      this.state.runCleared = true;
+      tableAdvance = { from: finishedTable.name, to: "Run cleared", clearedRun: true };
+      this.log("Run Clear", "You cleared the full Wizard Spades tavern ladder. The bids can rest now.", "economy");
+    }
+
+    this.state.lastRoundSummary = {
+      round: this.state.round,
+      title: "Wizard Spades",
+      message: this.state.winnerText,
+      winners: winners.map((winner) => ({
+        id: winner.id,
+        name: winner.name,
+        hand: `Bid ${winner.spadesBid ?? 0} / Won ${winner.spadesTricksWon}`,
+      })),
+      tableEvent: null,
+      humanResult: this.getPlayer("human")?.roundResult ?? "lost",
+      streak: this.state.humanWinStreak,
+      bestStreak: this.state.bestHumanWinStreak,
+      pot: bestScore,
+      fakePot: 0,
+      chaosMode: this.state.chaosMode,
+      doubleOrNothing: this.state.doubleOrNothing,
+      runFailed: this.state.runFailed,
+      rewardReady: false,
+      tableName: finishedTable.name,
+      starterLoadout: { ...this.getStarterLoadout() },
+      tableAdvance,
+      gameType: GAME_TYPES.spades,
+      spadesTrumpSuit: SPADES_TRUMP_SUIT,
+      spadesScores: playerScores.map((entry) => ({
+        id: entry.player.id,
+        name: entry.player.name,
+        bid: entry.player.spadesBid ?? 0,
+        tricks: entry.player.spadesTricksWon,
+        score: entry.score,
+      })),
+    };
+
+    winners.forEach((winner) => {
+      this.emitSpellFx({
+        category: winner.id === "human" ? "economy" : PERSONALITY_MOODS[winner.personality] ?? "economy",
+        text: winner.id === "human" ? "You win" : `${winner.name} wins`,
+        playerId: winner.id,
+        power: 3,
+        impact: true,
+      });
+    });
     this.notify();
   }
 
@@ -2291,7 +2690,7 @@ export class WizardPokerGame {
   }
 
   humanCastSpell(spellId, selected = null) {
-    if (this.state.gameType === GAME_TYPES.uno) {
+    if (this.state.gameType !== GAME_TYPES.poker) {
       return false;
     }
     const player = this.getCurrentPlayer();
@@ -2403,6 +2802,9 @@ export class WizardPokerGame {
     if (this.state.gameType === GAME_TYPES.uno) {
       return this.performUnoAction("human", type);
     }
+    if (this.state.gameType === GAME_TYPES.spades) {
+      return false;
+    }
     const current = this.getCurrentPlayer();
     if (!current || current.id !== "human") {
       return false;
@@ -2414,6 +2816,9 @@ export class WizardPokerGame {
   performAction(playerId, type) {
     if (this.state.gameType === GAME_TYPES.uno) {
       return this.performUnoAction(playerId, type);
+    }
+    if (this.state.gameType === GAME_TYPES.spades) {
+      return false;
     }
     const player = this.getPlayer(playerId);
     if (!player || this.state.roundEnded || this.state.currentPlayerId !== playerId) {
@@ -2925,6 +3330,58 @@ export class WizardPokerGame {
           : playable
             ? `${this.state.unoModifier?.name ? `${this.state.unoModifier.name} is live. ` : ""}Play a matching card or draw once. Match ${this.state.unoCurrentColor} or ${this.getUnoTopCard()?.rank ?? "anything"}.`
             : `${this.state.unoModifier?.name ? `${this.state.unoModifier.name} is live. ` : ""}No clean play. Draw once, then pass if the table still hates you.`,
+        };
+    }
+
+    if (this.state.gameType === GAME_TYPES.spades) {
+      const current = this.getCurrentPlayer();
+      const human = this.getPlayer("human");
+      if (!current || current.id !== "human" || this.state.roundEnded) {
+        return {
+          canCheck: false,
+          canRaise: false,
+          canFold: false,
+          canCast: false,
+          callAmount: 0,
+          checkLabel: this.state.spadesPhase === "bidding" ? "Lock bid" : "Play card",
+          raiseLabel: this.state.spadesPhase === "bidding" ? "Bid +1" : "Low card",
+          spellStateLabel: this.state.roundEnded ? "Round over" : "Waiting",
+          hint: this.state.roundEnded
+            ? this.state.winnerText || "Start a new round when you're ready."
+            : this.state.spadesPhase === "bidding"
+              ? "The other wizards are setting their contract."
+              : "The other wizards are deciding how rude to be with trump.",
+        };
+      }
+
+      if (this.state.spadesPhase === "bidding") {
+        const cursor = this.state.spadesBidCursor ?? 1;
+        return {
+          canCheck: true,
+          canRaise: cursor < SPADES_HAND_SIZE,
+          canFold: cursor > 0,
+          canCast: false,
+          callAmount: cursor,
+          checkLabel: `Bid ${cursor}`,
+          raiseLabel: cursor < SPADES_HAND_SIZE ? "Bid +1" : "Max bid",
+          spellStateLabel: `Bid ${cursor}`,
+          hint: `Choose your contract for this 3-trick hand. Moons are trump, and exact bids score best.`,
+        };
+      }
+
+      const legalCards = this.getSpadesLegalCards(human);
+      return {
+        canCheck: legalCards.length > 0,
+        canRaise: legalCards.length > 0,
+        canFold: legalCards.length > 0,
+        canCast: false,
+        callAmount: human.spadesBid ?? 0,
+        checkLabel: "Play card",
+        raiseLabel: "Low card",
+        spellStateLabel: `Bid ${human.spadesBid ?? 0} / Won ${human.spadesTricksWon ?? 0}`,
+        hint: this.state.spadesLeadSuit
+          ? `Follow ${this.state.spadesLeadSuit} if you can. Moons are trump.`
+          : `Lead the trick. ${this.state.spadesSpadesBroken ? "Moons are live." : "Moons stay tucked away until they break."}`,
       };
     }
 
@@ -2982,6 +3439,9 @@ export class WizardPokerGame {
   getVisibleState() {
     if (this.state.gameType === GAME_TYPES.uno) {
       return this.getUnoVisibleState();
+    }
+    if (this.state.gameType === GAME_TYPES.spades) {
+      return this.getSpadesVisibleState();
     }
 
     const human = this.getPlayer("human");
@@ -3244,6 +3704,147 @@ export class WizardPokerGame {
       unoCurrentColor: this.state.unoCurrentColor,
       unoHasDrawnThisTurn: this.state.unoHasDrawnThisTurn,
       unoModifier: this.state.unoModifier ? { ...this.state.unoModifier } : null,
+    };
+  }
+
+  getSpadesVisibleState() {
+    const human = this.getPlayer("human");
+    const activeEffects = [
+      {
+        label: "Trump suit",
+        detail: `${SPADES_TRUMP_SUIT} are trump`,
+      },
+      {
+        label: "Round shape",
+        detail: `${SPADES_HAND_SIZE} cards / ${SPADES_HAND_SIZE} tricks`,
+      },
+      {
+        label: "Phase",
+        detail: this.state.spadesPhase === "bidding" ? "Set your bid" : `Trick ${this.state.spadesTrickNumber}`,
+      },
+    ];
+    if (this.state.spadesLeadSuit) {
+      activeEffects.unshift({
+        label: "Lead suit",
+        detail: this.state.spadesLeadSuit,
+      });
+    }
+
+    return {
+      gameType: GAME_TYPES.spades,
+      round: this.state.round,
+      phase: this.state.spadesPhase === "bidding" ? "Bidding" : `Trick ${this.state.spadesTrickNumber}`,
+      phaseDescription: this.state.spadesPhase === "bidding"
+        ? `Set a bid from 0 to ${SPADES_HAND_SIZE}. Exact contracts score best, and ${SPADES_TRUMP_SUIT} are trump.`
+        : this.state.spadesLeadSuit
+          ? `Follow ${this.state.spadesLeadSuit} if you can. ${SPADES_TRUMP_SUIT} are trump.`
+          : `Lead the trick. ${this.state.spadesSpadesBroken ? `${SPADES_TRUMP_SUIT} are broken.` : `${SPADES_TRUMP_SUIT} stay hidden until they break.`}`,
+      phases: [
+        { name: "Bid", active: this.state.spadesPhase === "bidding" && !this.state.roundEnded, complete: this.state.spadesPhase !== "bidding" || this.state.roundEnded },
+        { name: "Play", active: this.state.spadesPhase === "playing" && !this.state.roundEnded, complete: this.state.roundEnded },
+      ],
+      activeEffects,
+      pot: this.state.spadesTrickNumber,
+      fakePot: 0,
+      currentBet: 0,
+      raiseAmount: 0,
+      winnerText: this.state.winnerText,
+      roundEnded: this.state.roundEnded,
+      revealedAll: this.state.revealedAll,
+      currentPlayerId: this.state.currentPlayerId,
+      turnOrderNames: this.turnOrder().map((player) => player.name),
+      match: {
+        humanWins: human.roundWins,
+        humanLosses: human.roundLosses,
+        humanTies: human.roundTies,
+        winStreak: this.state.humanWinStreak,
+        bestStreak: this.state.bestHumanWinStreak,
+      },
+      started: this.state.started,
+      seedLabel: this.state.seedLabel,
+      chaosMode: this.state.chaosMode,
+      doubleOrNothing: this.state.doubleOrNothing,
+      runCleared: this.state.runCleared,
+      runFailed: this.state.runFailed,
+      debugMode: this.state.debugMode,
+      debugRevealAll: this.state.debugRevealAll,
+      currentTable: {
+        ...this.getCurrentTable(),
+        index: this.state.runTableIndex,
+        total: TABLE_LADDER.length,
+        runCleared: this.state.runCleared,
+      },
+      starterLoadout: { ...this.getStarterLoadout() },
+      dailyChallenge: this.state.dailyChallenge
+        ? {
+            dateLabel: this.state.dailyChallenge.dateLabel,
+            modifiers: this.state.dailyChallenge.modifiers.map((modifier) => ({ ...modifier })),
+          }
+        : null,
+      humanRelics: this.state.humanRelics.map((relic) => ({ ...relic })),
+      pendingSpellDraft: null,
+      tableIntro: this.state.tableIntro ? { ...this.state.tableIntro } : null,
+      pendingRelicDraft: null,
+      tableEvent: null,
+      lastRoundSummary: this.state.lastRoundSummary ? { ...this.state.lastRoundSummary } : null,
+      humanResult: human.roundResult,
+      humanEvaluation: {
+        label: `Bid ${human.spadesBid ?? 0} / Won ${human.spadesTricksWon ?? 0}`,
+      },
+      players: this.state.players.map((player) => ({
+        id: player.id,
+        name: player.name,
+        personality: player.personality,
+        signatureName: null,
+        signatureDescription: null,
+        signatureState: player.id === this.state.currentPlayerId && !this.state.roundEnded ? "Active" : null,
+        stack: this.getSpadesScore(player),
+        mana: 0,
+        folded: false,
+        reflectShield: false,
+        blindNextTurn: false,
+        blindActive: false,
+        fakePotTrap: false,
+        skipNextAction: false,
+        manaCrashPending: false,
+        hand:
+          player.id === "human" || this.state.debugRevealAll || this.state.roundEnded
+            ? player.hand.map((card) => this.cloneCardForState(card))
+            : player.hand.map(() => ({ hidden: true })),
+        spells: [],
+        lastPeek: null,
+        roundResult: player.roundResult,
+        evaluation: {
+          label: `Bid ${player.spadesBid ?? 0} / Won ${player.spadesTricksWon ?? 0}`,
+          cards: [],
+        },
+        spadesBid: player.spadesBid ?? 0,
+        spadesTricksWon: player.spadesTricksWon ?? 0,
+        spadesScore: this.getSpadesScore(player),
+      })),
+      communityCards: this.state.spadesTrickCards.map((entry) => ({
+        ...this.cloneCardForState(entry.card),
+        playedBy: entry.playerName,
+      })),
+      communitySlots: Array.from({ length: this.state.players.length }, (_, index) => {
+        const entry = this.state.spadesTrickCards[index];
+        return entry
+          ? {
+              ...this.cloneCardForState(entry.card),
+              playedBy: entry.playerName,
+            }
+          : { hidden: true };
+      }),
+      actionState: this.getActionState(),
+      spellFxEvents: [...this.state.spellFxEvents],
+      spellHistory: [],
+      logEntries: [...this.logEntries],
+      spadesPhase: this.state.spadesPhase,
+      spadesBidCursor: this.state.spadesBidCursor,
+      spadesLeadSuit: this.state.spadesLeadSuit,
+      spadesTrumpSuit: SPADES_TRUMP_SUIT,
+      spadesTrickNumber: this.state.spadesTrickNumber,
+      spadesSpadesBroken: this.state.spadesSpadesBroken,
     };
   }
 

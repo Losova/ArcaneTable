@@ -112,6 +112,33 @@ const AI_PROFILES = {
   },
 };
 
+const SPADES_RANK_VALUES = {
+  "2": 2,
+  "3": 3,
+  "4": 4,
+  "5": 5,
+  "6": 6,
+  "7": 7,
+  "8": 8,
+  "9": 9,
+  "10": 10,
+  J: 11,
+  Q: 12,
+  K: 13,
+  A: 14,
+};
+
+function spadesRankValue(card) {
+  return SPADES_RANK_VALUES[card?.tempRank ?? card?.rank] ?? 0;
+}
+
+function spadesCardLabel(card) {
+  if (!card) {
+    return "a card";
+  }
+  return `${card.rank} of ${card.suit}`;
+}
+
 const PERSONALITY_FALLBACK = AI_PROFILES.chaos;
 
 function rankValue(rank) {
@@ -653,6 +680,72 @@ export function chooseAiUnoAction(game, player) {
     read: `${player.name} still can't match the pile and passes with visible disgust`,
     bark: pickLine(player.personality, "fold", game.random()),
     category: "defense",
+  };
+}
+
+export function chooseAiSpadesAction(game, player) {
+  if (game.state.spadesPhase === "bidding") {
+    const highCards = (player.hand ?? []).reduce((score, card) => {
+      const rank = card.rank;
+      if (card.suit === "Moons" && ["A", "K", "Q"].includes(rank)) {
+        return score + 1.2;
+      }
+      if (["A", "K"].includes(rank)) {
+        return score + 1;
+      }
+      if (rank === "Q") {
+        return score + 0.5;
+      }
+      return score;
+    }, 0);
+    const trumpCount = (player.hand ?? []).filter((card) => card.suit === "Moons").length;
+    let bid = Math.max(0, Math.min(3, Math.round((highCards + trumpCount * 0.65) / 1.45)));
+
+    if (player.personality === "bluff") {
+      bid = Math.max(0, Math.min(3, bid + (game.random() < 0.55 ? 1 : 0)));
+    } else if (player.personality === "frost") {
+      bid = Math.max(0, Math.min(3, bid - (game.random() < 0.45 ? 1 : 0)));
+    } else {
+      bid = Math.max(0, Math.min(3, bid + (game.random() < 0.33 ? -1 : game.random() < 0.66 ? 0 : 1)));
+    }
+
+    return {
+      type: "bid",
+      bid,
+      read: `${player.name} settles on ${bid} trick${bid === 1 ? "" : "s"} after a very theatrical look at ${player.hand.length} cards`,
+      bark: pickLine(player.personality, "check", game.random()),
+      category: player.personality === "frost" ? "defense" : player.personality === "bluff" ? "deception" : "chaos",
+    };
+  }
+
+  const legal = game.getSpadesLegalCards(player)
+    .map((card) => ({ card, index: player.hand.findIndex((entry) => entry.id === card.id) }))
+    .filter((entry) => entry.index >= 0);
+  if (!legal.length) {
+    return null;
+  }
+
+  const leadSuit = game.state.spadesLeadSuit;
+  const needMore = (player.spadesTricksWon ?? 0) < (player.spadesBid ?? 0);
+  const orderedLow = [...legal].sort((left, right) => spadesRankValue(left.card) - spadesRankValue(right.card));
+  const orderedHigh = [...orderedLow].reverse();
+  let choice = needMore ? orderedHigh[0] : orderedLow[0];
+
+  if (player.personality === "frost") {
+    choice = needMore ? orderedHigh[0] : orderedLow[0];
+  } else if (player.personality === "bluff") {
+    choice = leadSuit ? (needMore ? orderedHigh[0] : orderedLow[Math.min(1, orderedLow.length - 1)]) : orderedHigh[0];
+  } else {
+    const pool = needMore ? orderedHigh.slice(0, 2) : orderedLow.slice(0, 2);
+    choice = pool[Math.floor(game.random() * pool.length)] ?? choice;
+  }
+
+  return {
+    type: "play",
+    index: choice.index,
+    read: `${player.name} ${needMore ? "pushes for the contract" : "tries to duck extra tricks"} with ${spadesCardLabel(choice.card)}`,
+    bark: pickLine(player.personality, needMore ? "raise" : "check", game.random()),
+    category: choice.card.suit === "Moons" ? "chaos" : "economy",
   };
 }
 

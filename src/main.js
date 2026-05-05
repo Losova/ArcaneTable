@@ -1,4 +1,4 @@
-import { chooseAiAction, chooseAiSpell, chooseAiUnoAction } from "./ai.js";
+import { chooseAiAction, chooseAiSpell, chooseAiSpadesAction, chooseAiUnoAction } from "./ai.js";
 import {
   defaultCustomizationOverrides,
   defaultSelectedTitle,
@@ -29,6 +29,8 @@ let lastFrameTime = 0;
 let previousState = null;
 let aiSequenceLock = null;
 let renderFailureNoted = false;
+const urlParams = new URLSearchParams(window.location.search);
+const captureMode = urlParams.get("capture") === "1";
 const playerVoiceStamps = {
   table: null,
   round: null,
@@ -301,7 +303,7 @@ function currentDateLabel() {
 function calculateRoundGold(state) {
   let gold = 0;
   if (state.humanResult === "won") {
-    gold += state.gameType === "uno" ? 10 : 12;
+    gold += state.gameType === "poker" ? 12 : 10;
   } else if (state.humanResult === "tied") {
     gold += 4;
   }
@@ -926,6 +928,34 @@ function scheduleAiTurn(state, previous) {
       return;
     }
 
+    if (state.gameType === "spades") {
+      const action = chooseAiSpadesAction(game, player);
+      if (!action) {
+        return;
+      }
+      if (action.read) {
+        game.log("AI Read", action.read, action.category ?? "economy");
+      }
+      aiSequenceLock = player.id;
+      queueAiStep(() => {
+        const actingPlayer = game.getCurrentPlayer();
+        if (!actingPlayer || actingPlayer.id !== player.id || ui.titleVisible) {
+          aiSequenceLock = null;
+          return;
+        }
+        if (action.bark) {
+          game.log("Wizard Talk", `${player.name}: ${action.bark}`, AI_LOG_MOOD[player.personality] ?? "deception");
+        }
+        if (action.type === "bid") {
+          game.performSpadesAction(player.id, "bid", { bid: action.bid });
+        } else {
+          game.performSpadesAction(player.id, "play", { handIndex: action.index });
+        }
+        aiSequenceLock = null;
+      }, 200);
+      return;
+    }
+
     const spellDecision = chooseAiSpell(game, player);
     if (spellDecision) {
       if (spellDecision.read) {
@@ -1050,13 +1080,21 @@ renderer.setPresentationSettings({ stableVisuals: settings.stableVisuals, reduce
 body.classList.toggle("reduced-flash", Boolean(settings.reducedFlash));
 body.dataset.uiScale = settings.uiScale || "normal";
 body.dataset.appVersion = APP_META.version;
+body.dataset.captureMode = captureMode ? "title" : "";
 if (buildStamp) {
   buildStamp.textContent = `${APP_META.collectionName} build ${BUILD_STAMP}`;
 }
 ui.render(game.getVisibleState());
 attachDevSurface();
 window.requestAnimationFrame(tick);
-bootSequence();
+if (captureMode) {
+  bootScreen.classList.add("hidden");
+  ui.showTitleScreen(true);
+  ui.scrollTitleToTop();
+  ui.render(game.getVisibleState());
+} else {
+  bootSequence();
+}
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {

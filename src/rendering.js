@@ -1280,7 +1280,7 @@ export class TableRenderer {
     this.latestState = state;
     this.syncShowdownSequence(state);
     this.chaosMode = Boolean(state.chaosMode);
-    this.spellPouchInteractive = Boolean(state.started && state.gameType !== "uno");
+    this.spellPouchInteractive = Boolean(state.started && state.gameType === "poker");
     this.spellPouchReady = Boolean(
       this.spellPouchInteractive
       && !state.roundEnded
@@ -1465,6 +1465,24 @@ export class TableRenderer {
           map: createPlaqueTexture({
             title: "Deck",
             subtitle: `${pot} cards`,
+            accent: "#c49a55",
+          }),
+          transparent: true,
+          toneMapped: false,
+        }),
+      );
+      plaque.position.set(0.18, 1.88, 1.05);
+      plaque.scale.set(1.8, 0.56, 1);
+      this.activeGroup.add(plaque);
+      return;
+    }
+
+    if (this.latestState?.gameType === "spades") {
+      const plaque = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: createPlaqueTexture({
+            title: "Trick",
+            subtitle: `${this.latestState.spadesTrickNumber ?? pot} / 3`,
             accent: "#c49a55",
           }),
           transparent: true,

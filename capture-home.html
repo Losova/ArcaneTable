@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arcane Table Homescreen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IM+Fell+English+SC&family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-capture-mode="title">
+    <div id="title-screen" class="title-screen">
+      <div class="title-screen__panel">
+        <p class="title-kicker">Arcane card table. Three rivals. One pot.</p>
+        <h1 id="title-heading">ARCANE TABLE</h1>
+        <p class="title-copy">Draw cards, spend mana, and survive the table.</p>
+        <button class="title-scroll-cue" type="button" aria-label="Scroll down for more options">
+          <span class="title-scroll-cue__label">Scroll for tables, wardrobe, and run options</span>
+          <span class="title-scroll-cue__glyph" aria-hidden="true">⌄</span>
+        </button>
+
+        <section class="title-showcase">
+          <div class="title-showcase-copy">
+            <span class="title-showcase-kicker">Tonight's look</span>
+            <strong>Fresh Wizard You</strong>
+            <p>Your wizard waits by the felt in Apprentice Blues and Backroom Cone, while the mirror keeps its opinions to itself.</p>
+          </div>
+          <div class="title-showcase-stage">
+            <div class="title-showcase-static">
+              <div class="title-showcase-static__ring"></div>
+              <div class="title-showcase-static__wizard">
+                <span class="hat"></span>
+                <span class="head"></span>
+                <span class="robe"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="title-tables">
+          <div class="title-results__head">
+            <span>Tonight's game</span>
+            <strong>Arcane Table</strong>
+          </div>
+          <div class="table-grid">
+            <button class="table-card selected-target" type="button" data-table-game="poker">
+              <strong>Arcane Table</strong>
+              <span>Bluff, bet, sabotage.</span>
+              <small>Playable now</small>
+            </button>
+            <button class="table-card coming-soon" type="button" data-table-game="blackjack">
+              <strong>Wizard Blackjack</strong>
+              <span>Push totals. Cheat fate.</span>
+              <small>Coming soon</small>
+            </button>
+            <button class="table-card" type="button" data-table-game="uno">
+              <strong>Wizard Uno</strong>
+              <span>Curse colors. End friendships.</span>
+              <small>Playable now</small>
+            </button>
+            <button class="table-card" type="button" data-table-game="spades">
+              <strong>Wizard Spades</strong>
+              <span>Bid short. Trump hard.</span>
+              <small>Playable now</small>
+            </button>
+          </div>
+        </section>
+
+        <div class="title-actions">
+          <button class="action-button">Play</button>
+          <button class="secondary-button">Daily run</button>
+          <button class="secondary-button">Wardrobe</button>
+          <button class="secondary-button">Stats</button>
+          <button class="secondary-button">How to play</button>
+        </div>
+
+        <p class="title-note">Check, raise, fold, or cast. That is the whole problem.</p>
+        <p class="build-stamp">Arcane Table build 1.0.0-dev · V1 Foundation</p>
+      </div>
+    </div>
+  </body>
+</html>
