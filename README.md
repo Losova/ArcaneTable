@@ -1,6 +1,6 @@
 # Arcane Table
 
-Arcane Table is a static browser card tavern with two playable tables right now: `Arcane Table` and `Wizard Uno`. The build includes one human wizard, three AI rivals, a wardrobe/customizer, local autosave, seeded and daily runs, replay modifiers, and a committed low-fi magical presentation.
+Arcane Table is a static browser card tavern collection with three playable tables right now: `Arcane Table`, `Wizard Uno`, and `Wizard Spades`. The build includes one human wizard, three AI rivals, a wardrobe/customizer, local autosave, seeded and daily runs, replay modifiers, and a committed low-fi magical presentation.
 
 ## Run It
 
@@ -70,15 +70,15 @@ Useful dev console helpers:
 
 Version-one priorities from here:
 
-- tighten remaining gameplay balance between Poker and Uno
+- tighten remaining gameplay balance across all 3 tables
 - move repeated UI strings into a shared content layer
-- add a proper test harness for deterministic game-state checks
+- extend the deterministic smoke harness with more targeted state cases
 - separate rendering-only state from game rules even further
 
 Start flow:
 
 1. Wait through the `WIZCORP ENTERTAINMENT` boot screen.
-2. Use `Choose Your Table` on the title screen to pick `Arcane Table` or `Wizard Uno`.
+2. Use `Choose Your Table` on the title screen to pick `Arcane Table`, `Wizard Uno`, or `Wizard Spades`.
 3. Optionally set a seed, start the `Daily Run`, enable `Chaos Mode`, or enable debug tools.
 4. Press `PLAY` for a custom run or `DAILY RUN` for the date-seeded challenge.
 
@@ -86,6 +86,7 @@ Start flow:
 
 - `Arcane Table`: 3-card poker-lite with betting, mana, and a 22-spell sabotage deck.
 - `Wizard Uno`: a cursed Uno ladder with one rotating magical table rule each hand.
+- `Wizard Spades`: a compact 3-trick Spades ladder with bidding, trump moons, and exact-contract scoring.
 
 ## How To Play
 
@@ -112,11 +113,11 @@ Start flow:
 ## Controls
 
 - `PLAY`: begin a fresh run from the selected table.
-- `CONTINUE WIZARD POKER` / `CONTINUE WIZARD UNO`: resume the most recent unfinished local autosave.
+- `CONTINUE ...`: resume the most recent unfinished local autosave for the currently saved table.
 - `DAILY RUN`: begin the current date-seeded challenge run with 3 fixed mutators.
 - `HOW TO PLAY` or `HELP`: open the tutorial overlay.
 - `CODEX`: open the quick glossary for statuses and run systems.
-- `MENU`: open the in-match settings drawer for sound, visual stability, flash reduction, UI scale, and run reset.
+- `SETTINGS`: open the in-match settings drawer for sound, visual stability, flash reduction, UI scale, and a quick return home.
 - `CAM`: cycle the fixed PS2 camera angles.
 - `CHECK`, `RAISE`, `FOLD`: take your normal Poker turn action.
 - `PLAY`, `DRAW`, `PASS`: take your normal Uno turn action.
@@ -220,7 +221,7 @@ UI support:
 - Title screen now also includes a `DAILY RUN` start path for a date-seeded challenge mode.
 - The title screen stores a lightweight local profile and remembers your most recent run clear.
 - The title screen can resume an unfinished run from local autosave.
-- The title screen includes `Choose Your Table`, with `Arcane Table` and `Wizard Uno` currently playable.
+- The title screen includes `Choose Your Table`, with `Arcane Table`, `Wizard Uno`, and `Wizard Spades` currently playable.
 - Round transition banner between phases and end-of-round summary modal with streak tracking.
 - Each table now gets a stronger intro banner the first time you arrive there in a run.
 - Post-win relic drafting gives runs a stronger build identity without changing the core poker loop.

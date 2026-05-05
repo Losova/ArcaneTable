@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Arcane Table</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,13 +24,20 @@
 
     <div id="title-screen" class="title-screen">
       <div class="title-screen__panel">
-        <p id="title-kicker" class="title-kicker">Arcane card table. Three rivals. One pot.</p>
-        <h1 id="title-heading">WIZARD POKER</h1>
-        <p id="title-copy" class="title-copy">Draw cards, spend mana, and survive the table.</p>
+        <p id="title-kicker" class="title-kicker">The original backroom table. Three rivals. One suspicious pot.</p>
+        <h1 id="title-heading">ARCANE TABLE</h1>
+        <p id="title-copy" class="title-copy">Bluff, bet, spend mana, and survive the loudest table in the tavern.</p>
         <button id="title-scroll-cue" class="title-scroll-cue" type="button" aria-label="Scroll down for more options">
           <span class="title-scroll-cue__label">Scroll for tables, wardrobe, and run options</span>
           <span class="title-scroll-cue__glyph" aria-hidden="true">⌄</span>
         </button>
+        <section id="title-first-run-guide" class="title-first-run-guide hidden">
+          <div class="title-first-run-guide__copy">
+            <strong>Start here</strong>
+            <span>Pick a table, press Play, then watch your cards on the right. In Arcane Table, your spells live in the pouch by your wizard's right hand.</span>
+          </div>
+          <button id="title-first-run-dismiss" class="secondary-button" type="button">Got it</button>
+        </section>
 
         <section class="title-showcase">
           <div class="title-showcase-copy">
@@ -49,24 +56,19 @@
             <strong id="table-selection-headline">Arcane Table</strong>
           </div>
           <div id="table-grid" class="table-grid">
-            <button class="table-card selected-target" type="button" data-table-game="poker">
+            <button class="table-card selected-target" type="button" data-table-game="poker" data-table-tone="poker">
               <strong>Arcane Table</strong>
-              <span>Bluff, bet, sabotage.</span>
+              <span>Bluff, bet, and sabotage the tavern.</span>
               <small>Playable now</small>
             </button>
-            <button class="table-card coming-soon" type="button" data-table-game="blackjack">
-              <strong>Wizard Blackjack</strong>
-              <span>Push totals. Cheat fate.</span>
-              <small>Coming soon</small>
-            </button>
-            <button class="table-card" type="button" data-table-game="uno">
+            <button class="table-card" type="button" data-table-game="uno" data-table-tone="uno">
               <strong>Wizard Uno</strong>
-              <span>Curse colors. End friendships.</span>
+              <span>Curse colors and end friendships fast.</span>
               <small>Playable now</small>
             </button>
-            <button class="table-card" type="button" data-table-game="spades">
+            <button class="table-card" type="button" data-table-game="spades" data-table-tone="spades">
               <strong>Wizard Spades</strong>
-              <span>Bid short. Trump hard.</span>
+              <span>Bid sharply and let trump do the damage.</span>
               <small>Playable now</small>
             </button>
           </div>
@@ -272,10 +274,10 @@
     <div id="settings-overlay" class="overlay hidden">
       <div class="overlay-card tutorial-card">
         <div class="panel-heading">
-          <h2>Table settings</h2>
+          <h2>Quick settings</h2>
           <button id="close-settings-button" class="secondary-button">Back</button>
         </div>
-        <p class="summary-copy settings-lead">Keep the table readable and calm while you play.</p>
+        <p class="summary-copy settings-lead">Keep the table readable, calm, and easy to steer.</p>
         <div class="title-options settings-options">
           <label class="option-stack">
             <span>Text size</span>
@@ -298,7 +300,7 @@
           </label>
         </div>
         <div class="summary-actions">
-          <button id="reset-run-button" class="action-button danger">Reset run</button>
+          <button id="settings-home-button" class="action-button">Return home</button>
         </div>
       </div>
     </div>

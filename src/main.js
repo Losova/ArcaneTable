@@ -860,11 +860,18 @@ function handleAudioFromStateChange(previous, state) {
     }
     profile.bestStreak = Math.max(profile.bestStreak, state.match.bestStreak ?? 0);
     if (state.runCleared && !previous.runCleared) {
+      const modeLabel = state.gameType === "uno"
+        ? "Wizard Uno"
+        : state.gameType === "spades"
+          ? "Wizard Spades"
+          : "Arcane Table";
       profile.runsCleared += 1;
       profile.lastClear = {
         rank: rankFromBestStreak(state.match.bestStreak ?? 0),
         bestStreak: state.match.bestStreak ?? 0,
         pot: state.pot,
+        modeLabel,
+        gameType: state.gameType,
         winners: (state.lastRoundSummary?.winners ?? []).map((winner) => winner.name),
       };
     }

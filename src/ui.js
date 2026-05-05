@@ -26,33 +26,25 @@ const TITLE_TABLE_GAMES = {
   poker: {
     id: "poker",
     name: "Arcane Table",
-    kicker: "Arcane card table. Three rivals. One pot.",
-    copy: "Draw cards, spend mana, and survive the table.",
-    note: "Check, raise, fold, or cast. That is the whole problem.",
+    kicker: "The original backroom table. Three rivals. One suspicious pot.",
+    copy: "Bluff, bet, spend mana, and survive the loudest table in the tavern.",
+    note: "Check, raise, fold, or pull a spell from the pouch when the room deserves it.",
     playable: true,
-  },
-  blackjack: {
-    id: "blackjack",
-    name: "Wizard Blackjack",
-    kicker: "Dealer magic. Crooked totals. Bad math.",
-    copy: "Push totals, bend fate, and bully the dealer with spells.",
-    note: "This table is listed in the backroom ledger, but it is not playable yet.",
-    playable: false,
   },
   uno: {
     id: "uno",
     name: "Wizard Uno",
-    kicker: "Color curses. Loud reversals. Ruined friendships.",
-    copy: "Call colors, stack misery, and turn a simple race into a magical incident.",
-    note: "Match color or value, drop action cards, and empty your hand before the room turns on you.",
+    kicker: "Fast curses. Loud reversals. Absolutely no dignity.",
+    copy: "Race through your hand, weaponize color changes, and turn every draw into a personal slight.",
+    note: "Match color or value, then use wilds and action cards to keep the whole room off-balance.",
     playable: true,
   },
   spades: {
     id: "spades",
     name: "Wizard Spades",
-    kicker: "Three tricks. Trump moons. Loud bids.",
-    copy: "Bid your tricks, follow suit, and use trump at exactly the right rude moment.",
-    note: "This is a compact tavern Spades table: 3 cards, 3 tricks, and exact bids matter.",
+    kicker: "Short bids. Sharp tricks. Trump moons.",
+    copy: "Call your bid, follow suit, and use trump at the exact moment someone gets too comfortable.",
+    note: "This is a compact tavern Spades table: 3 cards, 3 tricks, and exact bids matter more than style.",
     playable: true,
   },
 };
@@ -95,8 +87,8 @@ const ONBOARDING_STEPS = {
     },
     {
       focus: "spells",
-      title: "Spells are your extra trouble",
-      copy: "Your spellbook is optional, but each spell can bend the rules once per turn.",
+      title: "Your spells live in the pouch",
+      copy: "The pouch by your wizard's right hand opens your spell list. Cast once per turn when the room deserves it.",
     },
   ],
   uno: [
@@ -755,6 +747,8 @@ export class UIController {
     this.statsButton = document.getElementById("stats-button");
     this.titleTutorialButton = document.getElementById("title-tutorial-button");
     this.titleScrollCue = document.getElementById("title-scroll-cue");
+    this.titleFirstRunGuide = document.getElementById("title-first-run-guide");
+    this.titleFirstRunDismiss = document.getElementById("title-first-run-dismiss");
     this.seedInput = document.getElementById("seed-input");
     this.uiScaleSelect = document.getElementById("ui-scale-select");
     this.loadoutSelect = document.getElementById("loadout-select");
@@ -794,7 +788,7 @@ export class UIController {
     this.matchSoundToggle = document.getElementById("match-sound-toggle");
     this.matchStableToggle = document.getElementById("match-stable-toggle");
     this.matchFlashToggle = document.getElementById("match-flash-toggle");
-    this.resetRunButton = document.getElementById("reset-run-button");
+    this.settingsHomeButton = document.getElementById("settings-home-button");
     this.unoColorOverlay = document.getElementById("uno-color-overlay");
     this.unoColorLead = document.getElementById("uno-color-lead");
     this.unoColorGrid = document.getElementById("uno-color-grid");
@@ -936,6 +930,7 @@ export class UIController {
     this.bindButton(this.titleScrollCue, () => {
       this.titleScreenPanel?.scrollBy({ top: 260, behavior: "smooth" });
     });
+    this.bindButton(this.titleFirstRunDismiss, () => this.dismissOnboarding());
     this.bindButton(this.closeTutorialButton, () => this.showTutorial(false));
     this.bindButton(this.codexButton, () => this.showCodex(true));
     this.bindButton(this.homeButton, () => this.returnToHomeScreen());
@@ -953,13 +948,7 @@ export class UIController {
     this.bindButton(this.closeUnoColorButton, () => this.showUnoColorPicker(false));
     this.bindButton(this.closeSpellPouchButton, () => this.toggleSpellPouch(false));
     this.bindButton(this.openSpellPouchButton, () => this.toggleSpellPouch(true));
-    this.bindButton(this.resetRunButton, () => {
-      this.showSettings(false);
-      this.hideSpellDraft();
-      this.hideRelicDraft();
-      this.hideRoundSummary();
-      this.onResetRun?.();
-    });
+    this.bindButton(this.settingsHomeButton, () => this.returnToHomeScreen());
 
     this.bindButton(this.summaryNextRoundButton, () => this.startNextRound());
     this.bindButton(this.summaryMenuButton, () => {
@@ -1095,22 +1084,12 @@ export class UIController {
       this.tableSelectionHeadline.textContent = selectedGame.name;
     }
     if (this.titleHeading) {
-      this.titleHeading.textContent = selectedGame.name.toUpperCase();
+      this.titleHeading.textContent = selectedGame.name;
     }
 
     this.startButton.disabled = !selectedGame.playable;
     this.dailyButton.disabled = !selectedGame.playable;
     this.dailyButton.classList.toggle("hidden", !selectedGame.playable);
-
-    if (!selectedGame.playable) {
-      this.startButton.textContent = "Coming soon";
-      this.continueButton.textContent = "Continue run";
-      this.titleKicker.textContent = selectedGame.kicker;
-      this.titleCopy.textContent = selectedGame.copy;
-      this.titleNote.textContent = selectedGame.note;
-      this.continueButton.classList.add("hidden");
-      return;
-    }
 
     this.startButton.textContent = hasFinish ? "Run it back" : "Play";
     const resumeGameType = this.resumeSnapshot?.state?.gameType === "uno"
@@ -1129,6 +1108,7 @@ export class UIController {
       ? "Run it back, try the daily run, or stop while the paperwork still likes you."
       : selectedGame.note;
     this.continueButton.classList.toggle("hidden", !Boolean(this.resumeSnapshot?.state?.started && !this.resumeSnapshot?.state?.runCleared && !this.resumeSnapshot?.state?.runFailed));
+    this.titleFirstRunGuide?.classList.toggle("hidden", this.onboardingDismissed || !this.titleVisible);
   }
 
   prepareForNewMatch({ seed, gameType, chaosMode, doubleOrNothing, loadoutId, debugMode, dailyMode }) {
@@ -1208,7 +1188,15 @@ export class UIController {
 
   loadOnboardingDismissed() {
     try {
-      return window.localStorage.getItem(STORAGE_KEYS.onboarding) === "done";
+      const raw = window.localStorage.getItem(STORAGE_KEYS.onboarding);
+      if (!raw) {
+        return false;
+      }
+      if (raw === "done") {
+        return true;
+      }
+      const parsed = JSON.parse(raw);
+      return Boolean(parsed?.dismissed);
     } catch {
       return false;
     }
@@ -1216,7 +1204,7 @@ export class UIController {
 
   persistOnboardingDismissed() {
     try {
-      window.localStorage.setItem(STORAGE_KEYS.onboarding, "done");
+      window.localStorage.setItem(STORAGE_KEYS.onboarding, JSON.stringify({ dismissed: true }));
     } catch {
       // Ignore storage issues and keep the session moving.
     }
@@ -1244,6 +1232,7 @@ export class UIController {
     const steps = ONBOARDING_STEPS[gameId] ?? ONBOARDING_STEPS.poker;
     const visible = !this.onboardingDismissed && !this.titleVisible && Boolean(state?.started) && !state?.roundEnded;
     const step = steps[Math.min(this.onboardingStepIndex, steps.length - 1)] ?? null;
+    this.titleFirstRunGuide?.classList.toggle("hidden", this.onboardingDismissed || !this.titleVisible);
 
     this.onboardingStrip?.classList.toggle("hidden", !visible || !step);
     this.handZone?.classList.remove("coach-focus");
@@ -1279,6 +1268,7 @@ export class UIController {
         finalRank: profile.lastClear.rank,
         bestStreak: profile.lastClear.bestStreak,
         pot: profile.lastClear.pot,
+        modeLabel: profile.lastClear.modeLabel ?? "Arcane Table",
         winners: (profile.lastClear.winners ?? []).map((name) => ({ name })),
       };
     }
@@ -1342,7 +1332,11 @@ export class UIController {
   updateTitleReturnState(summary = null) {
     const runClear = Boolean(summary?.tableAdvance?.clearedRun);
     if (runClear) {
-      const isUno = summary.gameType === "uno";
+      const modeLabel = summary.gameType === "uno"
+        ? "Wizard Uno"
+        : summary.gameType === "spades"
+          ? "Wizard Spades"
+          : "Arcane Table";
       const finalRank = summary.bestStreak >= 3
         ? "Licensed Menace"
         : summary.bestStreak >= 2
@@ -1352,6 +1346,7 @@ export class UIController {
         finalRank,
         bestStreak: summary.bestStreak,
         pot: summary.pot,
+        modeLabel,
         winners: summary.winners,
       };
     }
@@ -1367,9 +1362,10 @@ export class UIController {
     this.titleResultsKicker.textContent = "Last clear";
     this.titleResultsRank.textContent = finish.finalRank;
     this.titleResultsCopy.textContent = finish.winners?.length
-      ? `${finish.winners.map((winner) => winner.name).join(" & ")} closed the final hand.`
-      : "You cleared the whole tavern ladder.";
+      ? `${finish.modeLabel ?? "The table"} ended with ${finish.winners.map((winner) => winner.name).join(" & ")} closing the last hand.`
+      : `You cleared the full ${finish.modeLabel ?? "tavern"} ladder.`;
     this.titleResultsTags.innerHTML = [
+      `<span class="tag">${finish.modeLabel ?? "Arcane Table"}</span>`,
       `<span class="tag">Best streak ${finish.bestStreak}</span>`,
       `<span class="tag">Final pot ${finish.pot}</span>`,
       `<span class="tag">3 / 3 tables</span>`,
@@ -2110,11 +2106,16 @@ export class UIController {
         : summary.bestStreak >= 2
           ? "Table Problem"
           : "Suspicious Visitor";
+      const clearLead = isUno
+        ? "Wizard Uno cleared"
+        : isSpades
+          ? "Wizard Spades cleared"
+          : "Arcane Table cleared";
       this.updateTitleReturnState(summary);
       this.roundSummaryBody.innerHTML = `
         <div class="round-summary-grid run-clear-grid">
           <div class="summary-banner run-clear">
-            <strong>${getVictoryTitleFlavor(selectedTitleId, true)}</strong>
+            <strong>${clearLead}</strong>
             <p>${summary.message}</p>
           </div>
           <div class="run-clear-rank">
@@ -2125,25 +2126,32 @@ export class UIController {
           <div class="round-summary-line"><strong>Best streak</strong><span>${summary.bestStreak}</span></div>
           <div class="round-summary-line"><strong>${isUno ? "Final table" : isSpades ? "Final score" : "Final pot"}</strong><span>${isUno ? (summary.tableName ?? "Wizard Uno") : isSpades ? `${summary.pot} points` : `${summary.pot} real / ${summary.fakePot} fake`}</span></div>
           <div class="round-summary-line"><strong>Winners</strong><span>${winners || "No winner recorded."}</span></div>
+          <div class="round-summary-line"><strong>Next move</strong><span>Run it back or head home with the story.</span></div>
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Run it back";
       this.summaryMenuButton.textContent = "Home";
     } else if (summary.runFailed) {
+      const bustedLead = isUno
+        ? "Wizard Uno run busted"
+        : isSpades
+          ? "Wizard Spades run busted"
+          : "Arcane Table run busted";
       this.roundSummaryBody.innerHTML = `
         <div class="round-summary-grid run-clear-grid">
           <div class="summary-banner loss">
-            <strong>Double or nothing busted</strong>
+            <strong>${bustedLead}</strong>
             <p>${summary.message}</p>
           </div>
           <div class="run-clear-rank">
-            <span class="run-clear-label">Loadout</span>
-            <strong>${summary.starterLoadout?.name ?? "Plain Deck"}</strong>
+            <span class="run-clear-label">Last table</span>
+            <strong>${summary.tableName}</strong>
           </div>
-          <div class="round-summary-line"><strong>Table</strong><span>${summary.tableName}</span></div>
+          <div class="round-summary-line"><strong>Mode</strong><span>${summary.doubleOrNothing ? "Double or Nothing" : "Run over"}</span></div>
           <div class="round-summary-line"><strong>Best streak</strong><span>${summary.bestStreak}</span></div>
-          <div class="round-summary-line"><strong>Mode</strong><span>Double or Nothing</span></div>
+          <div class="round-summary-line"><strong>Loadout</strong><span>${summary.starterLoadout?.name ?? "Plain Deck"}</span></div>
           <div class="round-summary-line"><strong>Winners</strong><span>${winners || "No winner recorded."}</span></div>
+          <div class="round-summary-line"><strong>Next move</strong><span>Take a breath, then try a cleaner run.</span></div>
         </div>
       `;
       this.summaryNextRoundButton.textContent = "Run it back";
