@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
+import * as THREE from "../vendor/three.module.js";
 import { DEFAULT_CUSTOMIZATION } from "./customization.js";
 import { SPELL_CATEGORY_COLORS } from "./spells.js";
 

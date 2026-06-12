@@ -30,6 +30,33 @@ This project now includes:
 - [.gitignore](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/.gitignore) for a clean GitHub repo
 - [vercel.json](/Users/abiolabatiste/Documents/TRANSLATE%20APP/Wizard%20Poker/vercel.json) so Vercel treats the project as an explicit static deploy
 
+## Windows EXE
+
+The repo can also build a downloadable Windows installer with Electron.
+
+Local desktop preview:
+
+```bash
+npm install
+npm run desktop
+```
+
+Build a Windows installer:
+
+```bash
+npm run build:win
+```
+
+On GitHub, use the included `Build Windows EXE` workflow:
+
+1. Push the repo to GitHub.
+2. Open `Actions`.
+3. Choose `Build Windows EXE`.
+4. Click `Run workflow`.
+5. Download the `Arcane-Table-Windows` artifact after the build finishes.
+
+The generated installer is written to `release/` locally and uploaded as a GitHub Actions artifact in CI.
+
 ## Development
 
 This build is now set up as a cleaner `v1` foundation, not just a jam prototype.

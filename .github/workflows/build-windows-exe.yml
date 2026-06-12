@@ -1,0 +1,40 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    name: Build Arcane Table for Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check project
+        run: npm run check
+
+      - name: Run smoke tests
+        run: npm run test:smoke
+
+      - name: Build Windows installer
+        run: npm run build:win
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arcane-Table-Windows
+          path: release/*.exe
