@@ -2,6 +2,7 @@
   "name": "arcane-table",
   "version": "1.0.0",
   "description": "A magical tavern card game collection.",
+  "author": "Losova",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
@@ -9,7 +10,7 @@
     "check": "node --check src/config.js && node --check src/main.js && node --check src/ui.js && node --check src/rendering.js && node --check src/game.js && node --check src/ai.js && node --check src/spells.js && node --check electron/main.cjs",
     "test:smoke": "node ./scripts/smoke-test.mjs",
     "desktop": "electron .",
-    "build:win": "electron-builder --win nsis --x64"
+    "build:win": "electron-builder --win nsis --x64 --publish never"
   },
   "build": {
     "appId": "com.arcanetable.game",
