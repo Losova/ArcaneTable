@@ -55,6 +55,15 @@ On GitHub, use the included `Build Windows EXE` workflow:
 4. Click `Run workflow`.
 5. Download the `Arcane-Table-Windows` artifact after the build finishes.
 
+To publish a public downloadable installer, push a version tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions will build the Windows installer and attach the `.exe` to the GitHub Release for that tag.
+
 The generated installer is written to `release/` locally and uploaded as a GitHub Actions artifact in CI.
 
 ## Development
